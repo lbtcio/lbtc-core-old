@@ -292,8 +292,8 @@ public:
     bool IsValidBlockCheckIrreversibleBlock(int64_t height, uint256 hash);
     void AddIrreversibleBlock(int64_t height, uint256 hash);
 
-    const int nFirstIrreversibleThreshold = 30;
-    const int nSecondIrreversibleThreshold = 20;
+    const int nFirstIrreversibleThreshold = 90;
+    const int nSecondIrreversibleThreshold = 67;
     const int nMaxIrreversibleCount = 5;
 
 private:
