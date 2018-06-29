@@ -254,11 +254,10 @@ public:
     DelegateInfo GetNextDelegate();
     bool GetCurrentDelegate(DelegateInfo& cDelegateInfo, CBlockIndex* pBlockIndex);
     bool GetCurrentDelegate(DelegateInfo& cDelegateInfo, const CBlock& block);
-    bool CheckDelegate(DelegateInfo& cDelegateInfo);
     bool CheckBlockDelegate(const CBlock& block);
     bool CheckBlockHeader(const CBlockHeader& block);
     bool CheckBlock(const CBlockIndex& blockindex, bool fIsCheckDelegateInfo);
-    bool CheckCoinbase(const CTransaction& tx, time_t t);
+    bool CheckCoinbase(const CTransaction& tx, time_t t, int64_t height);
 
     uint64_t GetLoopIndex(uint64_t time);
     uint32_t GetDelegateIndex(uint64_t time);
@@ -294,7 +293,7 @@ public:
 
     const int nFirstIrreversibleThreshold = 90;
     const int nSecondIrreversibleThreshold = 67;
-    const int nMaxIrreversibleCount = 5;
+    const int nMaxIrreversibleCount = 1000;
 
 private:
     bool CheckBlock(const CBlock& block, bool fIsCheckDelegateInfo);

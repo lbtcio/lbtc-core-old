@@ -964,26 +964,6 @@ bool DPoS::GetCurrentDelegate(DelegateInfo& cDelegateInfo, const CBlock& block)
     return GetCurrentDelegate(cDelegateInfo, &blockindex);
 }
 
-bool DPoS::CheckDelegate(DelegateInfo& cDelegateInfo)
-{
-    if(cDelegateInfo.delegates.size() != (uint64_t)DPoS::nMaxDelegateNumber) {
-        return false;
-    }
-
-    DelegateInfo&& cNextDelegateInfo = GetNextDelegate();
-    std::vector<Delegate>& vNextDelegate = cNextDelegateInfo.delegates;
-
-    std::vector<Delegate>& vDelegate = cDelegateInfo.delegates;
-
-    for(unsigned int i =0; i < vNextDelegate.size(); ++i) {
-        if(vDelegate[i].keyid != vNextDelegate[i].keyid) {
-            return false;
-        }
-    }
-    
-    return true;
-}
-
 uint64_t DPoS::GetLoopIndex(uint64_t time)
 {
     if(time < nDposStartTime) {
@@ -1002,7 +982,7 @@ uint32_t DPoS::GetDelegateIndex(uint64_t time)
     }
 }
 
-bool DPoS::CheckCoinbase(const CTransaction& tx, time_t t)
+bool DPoS::CheckCoinbase(const CTransaction& tx, time_t t, int64_t height)
 {
     bool ret = false;
     if(tx.vout.size() == 2) {
@@ -1011,15 +991,19 @@ bool DPoS::CheckCoinbase(const CTransaction& tx, time_t t)
 		std::vector<unsigned char> vctPublicKey;
         if(ScriptToDelegateInfo(cDelegateInfo, tDelegateInfo, &vctPublicKey, tx.vout[1].scriptPubKey)) {
 			if(t == tDelegateInfo) {
-				CPubKey pubkey(vctPublicKey);
-				CTxDestination address;
-				ExtractDestination(tx.vout[0].scriptPubKey, address);
+				if(height > 2400000) {
+				    CPubKey pubkey(vctPublicKey);
+				    CTxDestination address;
+				    ExtractDestination(tx.vout[0].scriptPubKey, address);
 
-				if(address.type() == typeid(CKeyID) 
-					&& boost::get<CKeyID>(address) == pubkey.GetID()) {
-					ret = true;
+				    if(address.type() == typeid(CKeyID)
+					    && boost::get<CKeyID>(address) == pubkey.GetID()) {
+					    ret = true;
+				    } else {
+					    ret = false;
+				    }
 				} else {
-					ret = false;	
+					ret = true;
 				}
 			}
         }
@@ -1310,7 +1294,7 @@ bool DPoS::CheckBlock(const CBlock& block, bool fIsCheckDelegateInfo)
     if(CheckTransactionVersion(block) == false) 
         return false;
 
-    if(CheckCoinbase(*block.vtx[0], block.nTime) == false) {
+    if(CheckCoinbase(*block.vtx[0], block.nTime, nBlockHeight) == false) {
         LogPrintf("CheckBlock CheckCoinbase error\n");
         return false;
     }
