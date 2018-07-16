@@ -664,15 +664,18 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
                 "}\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("getaddresstxids", "15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT")
-            + HelpExampleCli("getaddresstxids", "15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT 200")
-            + HelpExampleRpc("getaddresstxids", "15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT")
-            + HelpExampleRpc("getaddresstxids", "15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT 200")
+            + HelpExampleCli("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\"")
+            + HelpExampleCli("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\" 200")
+            + HelpExampleRpc("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\"")
+            + HelpExampleRpc("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\", 200")
         );
 
     int max_count = 100;
     if(request.params.size() == 2) {
         max_count = atoi(request.params[1].get_str().c_str());
+        if(max_count <= 0) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid maxnumber");
+        }
     }
 
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;

@@ -3159,8 +3159,8 @@ UniValue registe(const JSONRPCRequest& request)
             "\nResult:\n"
             "\"txid\"                   (string) The transaction id.\n"
             "\nExamples:\n"
-            + HelpExampleCli("register", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" \"test-delegate\"")
-            + HelpExampleRpc("register", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" \"test-delegate\"")
+            + HelpExampleCli("register", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" \"delegateName\"")
+            + HelpExampleRpc("register", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", \"delegateName\"")
         );
 
     LOCK2(cs_main, pwalletMain->cs_wallet); 
@@ -3267,7 +3267,8 @@ UniValue vote(const JSONRPCRequest& request) {
             "\nExamples:\n"
             + HelpExampleCli("vote", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" \"delegater1\"")
             + HelpExampleCli("vote", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" \"delegater2\" \"delegater3\"")
-            + HelpExampleRpc("vote", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" \"delegater1\"")
+            + HelpExampleRpc("vote", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", \"delegater1\"")
+            + HelpExampleRpc("vote", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", \"delegater2\", \"delegater3\"")
        );
 
     CBitcoinAddress address(request.params[0].get_str());
@@ -3326,7 +3327,8 @@ UniValue cancelvote(const JSONRPCRequest& request) {
             "\nExamples:\n"
             + HelpExampleCli("cancelvote", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" \"delegater1\"")
             + HelpExampleCli("cancelvote", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" \"delegater2\" \"delegater3\"")
-            + HelpExampleRpc("cancelvote", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" \"delegater1\"")
+            + HelpExampleRpc("cancelvote", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", \"delegater1\"")
+            + HelpExampleRpc("cancelvote", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", \"delegater2\", \"delegater3\"")
        );
 
     CBitcoinAddress address(request.params[0].get_str());
@@ -3414,8 +3416,8 @@ UniValue getdelegatevotes(const JSONRPCRequest& request)
             "\nResult:\n"
             "\"number\"               (numeric) The number of votes the delegate received.\n"
             "\nExamples:\n"
-            + HelpExampleCli("listreceivedvotes", "\"test-delegate-name\"")
-            + HelpExampleRpc("listreceivedvotes", "\"test-delegate-name\"")
+            + HelpExampleCli("getdelegatevotes", "\"delegateName\"")
+            + HelpExampleRpc("getdelegatevotes", "\"delegateName\"")
         );
 
     Vote &vote = Vote::GetInstance();
