@@ -1,1 +1,2 @@
-src/clientversion.cpp export-subst
+*.h linguist-language=C++
+*.cpp linguist-language=C++
