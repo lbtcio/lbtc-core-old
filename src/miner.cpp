@@ -767,9 +767,7 @@ void DPoS::Init()
         nDposStartHeight = 500200;
     } else {
         strDelegateAddress = "my5ioJEbbhMjRzgyQpcnq6fmbfUMQgTqMZ";
-		//whh
         gDPoS.nDposStartTime = 1523522491;
-        //gDPoS.nDposStartTime = 1531709521;
 
         nMaxDelegateNumber = 10;
         nBlockIntervalTime = 3;
@@ -874,7 +872,7 @@ DelegateInfo DPoS::GetNextDelegates(int64_t t)
     uint64_t nLoopIndex = GetLoopIndex(t);
     uint64_t nMinHoldBalance = 0;
     if(Params().NetworkIDString() == "main") {
-        if(nLoopIndex >= 46611) {
+        if(nLoopIndex >= 47169) {
             nMinHoldBalance = 240000000000;
         }
     } else {
@@ -899,11 +897,13 @@ DelegateInfo DPoS::GetNextDelegates(int64_t t)
 
     DelegateInfo cDelegateInfo;
     if(Params().NetworkIDString() == "main") {
-        cDelegateInfo.delegates = delegates;
+        if(nLoopIndex >= 47169) {
+            cDelegateInfo.delegates = SortDelegate(delegates);
+        } else {
+            cDelegateInfo.delegates = delegates;
+        }
     } else {
-        //whh
         cDelegateInfo.delegates = SortDelegate(delegates);
-        //cDelegateInfo.delegates = delegates;
     }
 
     return cDelegateInfo;
