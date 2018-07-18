@@ -873,7 +873,7 @@ DelegateInfo DPoS::GetNextDelegates(int64_t t)
     uint64_t nMinHoldBalance = 0;
     if(Params().NetworkIDString() == "main") {
         if(nLoopIndex >= 47169) {
-            nMinHoldBalance = 240000000000;
+            nMinHoldBalance = 500000000000;
         }
     } else {
         if(nLoopIndex >= 277019) {
