@@ -873,9 +873,7 @@ DelegateInfo DPoS::GetNextDelegates(int64_t t)
 {
     uint64_t nLoopIndex = GetLoopIndex(t);
     uint64_t nMinHoldBalance = 0;
-	printf("loop %ld\n", nLoopIndex);
     if(Params().NetworkIDString() == "main") {
-		LogPrintf("Update 1.2.0\n");
         if(nLoopIndex >= 46611) {
             nMinHoldBalance = 240000000000;
         }
