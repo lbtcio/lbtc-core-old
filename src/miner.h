@@ -224,7 +224,6 @@ struct Delegate{
 };
 
 struct DelegateInfo{
-    int64_t nLoopIndex;
     std::vector<Delegate> delegates;
 };
 
@@ -251,9 +250,9 @@ public:
 
     bool IsMining(DelegateInfo& cDelegateInfo, const std::string& strDelegateAddress, time_t t);
 
-    DelegateInfo GetNextDelegate();
-    bool GetCurrentDelegate(DelegateInfo& cDelegateInfo, CBlockIndex* pBlockIndex);
-    bool GetCurrentDelegate(DelegateInfo& cDelegateInfo, const CBlock& block);
+    DelegateInfo GetNextDelegates(int64_t t);
+    bool GetBlockDelegates(DelegateInfo& cDelegateInfo, CBlockIndex* pBlockIndex);
+    bool GetBlockDelegates(DelegateInfo& cDelegateInfo, const CBlock& block);
     bool CheckBlockDelegate(const CBlock& block);
     bool CheckBlockHeader(const CBlockHeader& block);
     bool CheckBlock(const CBlockIndex& blockindex, bool fIsCheckDelegateInfo);
@@ -299,7 +298,6 @@ private:
     bool CheckBlock(const CBlock& block, bool fIsCheckDelegateInfo);
     static int FastCheckBlockHash(const CBlockHeader& header);
     std::vector<Delegate> SortDelegate(const std::vector<Delegate>& delegates);
-    std::vector<Delegate> GetCurrentDelegates();
     bool CheckTransactionVersion(const CBlock& block);
 
     bool IsOnTheSameChain(const std::pair<int64_t, uint256>& first, const std::pair<int64_t, uint256>& second);

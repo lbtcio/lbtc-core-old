@@ -22,6 +22,7 @@ Vote::~Vote()
 #define DELEGATE_FILE "delegate.dat"
 #define BALANCE_FILE "balance.dat"
 #define CONTROL_FILE "control.dat"
+#define INVALIDVOTETX_FILE "invalidvotetx.dat"
 
 bool Vote::Init(int64_t nBlockHeight, const std::string& strBlockHash)
 { 
@@ -32,6 +33,7 @@ bool Vote::Init(int64_t nBlockHeight, const std::string& strBlockHash)
     strVoteFileName = strFilePath + "/" + VOTE_FILE;
     strBalanceFileName = strFilePath + "/" + BALANCE_FILE;
     strControlFileName = strFilePath + "/" + CONTROL_FILE;
+    strInvalidVoteTxFileName = strFilePath + "/" + INVALIDVOTETX_FILE;
 
     if(nBlockHeight == 0) {
         if(!boost::filesystem::is_directory(strFilePath)) {
@@ -148,6 +150,58 @@ Vote& Vote::GetInstance()
     return vote;
 }
 
+bool Vote::ProcessVote(CKeyID& voter, const std::set<CKeyID>& delegates, uint256 hash, uint64_t height, bool fUndo)
+{
+    if(fUndo) {
+        return ProcessUndoVote(voter, delegates, hash, height);
+    } else {
+        return ProcessVote(voter, delegates, hash, height);
+    }
+}
+
+bool Vote::ProcessVote(CKeyID& voter, const std::set<CKeyID>& delegates, uint256 hash, uint64_t height)
+{
+    bool ret = ProcessVote(voter, delegates);
+    if(ret == false) {
+        AddInvalidVote(hash, height);
+        LogPrintf("ProcessVote InvalidTx Hash:%s height:%lld\n", hash.ToString().c_str(), height);
+    }
+
+    LogPrintf("DPoS ProcessVote Height:%u\n", height);
+    for(auto i : delegates) {
+        LogPrintf("DPoS ProcessVote: %s ---> %s(%s)\n", CBitcoinAddress(voter).ToString().c_str(), Vote::GetInstance().GetDelegate(i).c_str(), CBitcoinAddress(i).ToString().c_str());
+    }
+    if(ret) {
+        LogPrintf("DPoS ProcessVote success\n");
+    } else {
+        LogPrintf("DPoS ProcessVote fail\n");
+    }
+
+    return ret;
+}
+
+bool Vote::ProcessUndoVote(CKeyID& voter, const std::set<CKeyID>& delegates, uint256 hash, uint64_t height)
+{
+    if(FindInvalidVote(hash)) {
+        LogPrintf("ProcessUndoVote InvalidTx Hash:%s height:%lld\n", hash.ToString().c_str(), height);
+        return true;
+    }
+
+    bool ret = ProcessCancelVote(voter, delegates);
+
+    LogPrintf("DPoS ProcessUndoVote Height:%u\n", height);
+    for(auto i : delegates) {
+        LogPrintf("DPoS ProcessUndoVote: %s ---> %s(%s)\n", CBitcoinAddress(voter).ToString().c_str(), Vote::GetInstance().GetDelegate(i).c_str(), CBitcoinAddress(i).ToString().c_str());
+    }
+    if(ret) {
+        LogPrintf("DPoS ProcessUndoVote success\n");
+    } else {
+        LogPrintf("DPoS ProcessUndoVote fail\n");
+    }
+
+    return ret;
+}
+
 bool Vote::ProcessVote(CKeyID& voter, const std::set<CKeyID>& delegates)
 {
     write_lock w(lockVote);
@@ -191,6 +245,57 @@ bool Vote::ProcessVote(CKeyID& voter, const std::set<CKeyID>& delegates)
     return true;
 }
 
+bool Vote::ProcessCancelVote(CKeyID& voter, const std::set<CKeyID>& delegates, uint256 hash, uint64_t height, bool fUndo)
+{
+    if(fUndo) {
+        return ProcessUndoCancelVote(voter, delegates, hash, height);
+    } else {
+        return ProcessCancelVote(voter, delegates, hash, height);
+    }
+}
+
+bool Vote::ProcessCancelVote(CKeyID& voter, const std::set<CKeyID>& delegates, uint256 hash, uint64_t height)
+{
+    bool ret = ProcessCancelVote(voter, delegates);
+    if(ret == false) {
+        AddInvalidVote(hash, height);
+        LogPrintf("ProcessCancelVote InvalidTx Hash:%s height:%lld\n", hash.ToString().c_str(), height);
+    }
+
+    LogPrintf("DPoS ProcessCancelVote Height:%u\n", height);
+    for(auto i : delegates) {
+        LogPrintf("DPoS ProcessCancelVote: %s ---> %s(%s)\n", CBitcoinAddress(voter).ToString().c_str(), Vote::GetInstance().GetDelegate(i).c_str(), CBitcoinAddress(i).ToString().c_str());
+    }
+    if(ret) {
+        LogPrintf("DPoS ProcessCancelVote success\n");
+    } else {
+        LogPrintf("DPoS ProcessCancelVote fail\n");
+    }
+
+    return ret;
+}
+
+bool Vote::ProcessUndoCancelVote(CKeyID& voter, const std::set<CKeyID>& delegates, uint256 hash, uint64_t height)
+{
+    if(FindInvalidVote(hash)) {
+        LogPrintf("ProcessUndoCancelVote InvalidTx Hash:%s height:%lld\n", hash.ToString().c_str(), height);
+        return true;
+    }
+
+    bool ret = ProcessVote(voter, delegates);
+    LogPrintf("DPoS ProcessUndoCancelVote Height:%u\n", height);
+    for(auto i : delegates) {
+        LogPrintf("DPoS ProcessUndoCancelVote: %s ---> %s(%s)\n", CBitcoinAddress(voter).ToString().c_str(), Vote::GetInstance().GetDelegate(i).c_str(), CBitcoinAddress(i).ToString().c_str());
+    }
+    if(ret) {
+        LogPrintf("DPoS ProcessUndoCancelVote success\n");
+    } else {
+        LogPrintf("DPoS ProcessUndoCancelVote fail\n");
+    }
+
+    return ret;
+}
+
 bool Vote::ProcessCancelVote(CKeyID& voter, const std::set<CKeyID>& delegates)
 {
     write_lock w(lockVote);
@@ -231,6 +336,50 @@ bool Vote::ProcessCancelVote(CKeyID& voter, const std::set<CKeyID>& delegates)
     }
 
     return true;
+}
+
+bool Vote::ProcessRegister(CKeyID& delegate, const std::string& strDelegateName, uint256 hash, uint64_t height, bool fUndo)
+{
+    if(fUndo) {
+        return ProcessUndoRegister(delegate, strDelegateName, hash, height);
+    } else {
+        return ProcessRegister(delegate, strDelegateName, hash, height);
+    }
+}
+
+bool Vote::ProcessRegister(CKeyID& delegate, const std::string& strDelegateName, uint256 hash, uint64_t height)
+{
+    bool ret = ProcessRegister(delegate, strDelegateName);
+    if(ret == false) {
+        AddInvalidVote(hash, height);
+        LogPrintf("ProcessRegister InvalidTx Hash:%s height:%lld\n", hash.ToString().c_str(), height);
+    }
+
+    if(ret) {
+        LogPrintf("DPoS ProcessRegister: Height:%u %s ---> %s success\n", height, CBitcoinAddress(delegate).ToString().c_str(), strDelegateName.c_str());
+    } else {
+        LogPrintf("DPoS ProcessRegister: Height:%u %s ---> %s fail\n", height, CBitcoinAddress(delegate).ToString().c_str(), strDelegateName.c_str());
+    }
+
+    return ret;
+}
+
+bool Vote::ProcessUndoRegister(CKeyID& delegate, const std::string& strDelegateName, uint256 hash, uint64_t height)
+{
+    if(FindInvalidVote(hash)) {
+        LogPrintf("ProcessUndoRegister InvalidTx Hash:%s height:%lld\n", hash.ToString().c_str(), height);
+        return true;
+    }
+
+    bool ret = ProcessUnregister(delegate, strDelegateName);
+
+    if(ret) {
+        LogPrintf("DPoS ProcessUndoRegister: Height:%u %s ---> %s success\n", height, CBitcoinAddress(delegate).ToString().c_str(), strDelegateName.c_str());
+    } else {
+        LogPrintf("DPoS ProcessUndoRegister: Height:%u %s ---> %s fail\n", height, CBitcoinAddress(delegate).ToString().c_str(), strDelegateName.c_str());
+    }
+
+    return ret;
 }
 
 bool Vote::ProcessRegister(CKeyID& delegate, const std::string& strDelegateName)
@@ -377,7 +526,7 @@ std::set<CKeyID> Vote::GetVotedDelegates(CKeyID& delegate)
     return s;
 }
 
-std::vector<Delegate> Vote::GetVoteInfo()
+std::vector<Delegate> Vote::GetTopDelegateInfo(uint64_t nMinHoldBalance, uint32_t nDelegateNum)
 {
     read_lock r(lockVote);
     std::set<std::pair<uint64_t, CKeyID>> delegates;
@@ -385,12 +534,18 @@ std::vector<Delegate> Vote::GetVoteInfo()
     for(auto item : mapDelegateVoters)
     {
         uint64_t votes = _GetDelegateVotes(item.first);
-        delegates.insert(std::make_pair(votes, item.first));
+        if(_GetAddressBalance(item.first) >= nMinHoldBalance) {
+            delegates.insert(std::make_pair(votes, item.first));
+        }
     }
 
     for(auto it = mapDelegateName.rbegin(); it != mapDelegateName.rend(); ++it)
     {
-        if(delegates.size() >= 100) {
+        if(_GetAddressBalance(it->first) < nMinHoldBalance) {
+            continue;
+        }
+
+        if(delegates.size() >= nDelegateNum) {
             break;    
         }
 
@@ -401,7 +556,7 @@ std::vector<Delegate> Vote::GetVoteInfo()
     std::vector<Delegate> result;
     for(auto it = delegates.rbegin(); it != delegates.rend(); ++it)
     {
-        if(result.size() >= 100) {
+        if(result.size() >= nDelegateNum) {
             break;    
         }
 
@@ -451,6 +606,15 @@ bool Vote::Write(const std::string& strBlockHash)
         for(auto i : item.second) {
             fwrite(i.begin(), sizeof(i), 1, file);
         }
+    }
+    fclose(file);
+
+    file = fopen((strInvalidVoteTxFileName + "-" + strBlockHash).c_str(), "wb");
+    for(auto item : mapHashHeightInvalidVote)
+    {
+        auto strHash = item.first.GetHex();
+        fwrite(strHash.c_str(), strHash.length(), 1, file);
+        fwrite(&item.second, sizeof(item.second), 1, file);
     }
     fclose(file);
 
@@ -528,9 +692,10 @@ bool Vote::Read()
         fread(&count, sizeof(count), 1, file);
 
         unsigned char name[128];
+        memset(name, 0, sizeof(name));
         fread(&name[0], count, 1, file);
-        name[count] = 0;
-        std::string sname((const char*)&name[0]);
+
+        std::string sname((const char*)&name[0], count);
         mapDelegateName[delegate] = sname;
         mapNameDelegate[sname] = delegate;
     }
@@ -555,6 +720,23 @@ bool Vote::Read()
             mapDelegateVoters[delegate].insert(voter);
             mapVoterDelegates[voter].insert(delegate);
         }
+    }
+    fclose(file);
+    }
+
+    file = fopen((strInvalidVoteTxFileName + "-" + strOldBlockHash).c_str(), "rb");
+    if(file) {
+    while(1)
+    {
+        if(fread(&buff[0], 64, 1, file) <= 0) {
+            break;
+        }
+        uint256 hash;
+        hash.SetHex((const char*)&buff[0]);
+
+        uint64_t height;
+        fread(&height, sizeof(height), 1, file);
+        AddInvalidVote(hash, height);
     }
     fclose(file);
     }
@@ -643,4 +825,30 @@ uint64_t Vote::_UpdateAddressBalance(const CKeyID& address, int64_t value)
 
         return value;
     }
+}
+
+void Vote::DeleteInvalidVote(uint64_t height)
+{
+    write_lock r(lockMapHashHeightInvalidVote);
+    for(auto it =  mapHashHeightInvalidVote.begin(); it != mapHashHeightInvalidVote.end();) {
+        if(it->second <= height) {
+            LogPrintf("DeleteInvalidVote Hash:%s Height:%llu\n", it->first.ToString().c_str(), it->second);
+            it = mapHashHeightInvalidVote.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void Vote::AddInvalidVote(uint256 hash, uint64_t height)
+{
+    write_lock r(lockMapHashHeightInvalidVote);
+    mapHashHeightInvalidVote[hash] = height;
+    LogPrintf("AddInvalidVote Hash:%s Height:%llu\n", hash.ToString().c_str(), height);
+}
+
+bool Vote::FindInvalidVote(uint256 hash)
+{
+    read_lock r(lockMapHashHeightInvalidVote);
+    return mapHashHeightInvalidVote.find(hash) != mapHashHeightInvalidVote.end();
 }

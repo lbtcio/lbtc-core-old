@@ -26,11 +26,12 @@ public:
     ~Vote();
     bool Init(int64_t nBlockHeight, const std::string& strBlockHash);
     static Vote& GetInstance();
-    std::vector<Delegate> GetVoteInfo();
-    bool ProcessVote(CKeyID& voter, const std::set<CKeyID>& delegates);
-    bool ProcessCancelVote(CKeyID& voter, const std::set<CKeyID>& delegates);
-    bool ProcessRegister(CKeyID& delegate, const std::string& strDelegateName);
-    bool ProcessUnregister(CKeyID& delegate, const std::string& strDelegateName);
+    std::vector<Delegate> GetTopDelegateInfo(uint64_t nMinHoldBalance, uint32_t nDelegateNum);
+
+    bool ProcessVote(CKeyID& voter, const std::set<CKeyID>& delegates, uint256 hash, uint64_t height, bool fUndo);
+    bool ProcessCancelVote(CKeyID& voter, const std::set<CKeyID>& delegates, uint256 hash, uint64_t height, bool fUndo);
+    bool ProcessRegister(CKeyID& delegate, const std::string& strDelegateName, uint256 hash, uint64_t height, bool fUndo);
+
     uint64_t GetDelegateVotes(const CKeyID& delegate);
     std::set<CKeyID> GetDelegateVoters(CKeyID& delegate);
     std::set<CKeyID> GetVotedDelegates(CKeyID& delegate);
@@ -53,6 +54,10 @@ public:
     int64_t GetOldBlockHeight() {return nOldBlockHeight;}
     std::string GetOldBlockHash() {return strOldBlockHash;}
 
+    void AddInvalidVote(uint256 hash, uint64_t height);
+    void DeleteInvalidVote(uint64_t height);
+    bool FindInvalidVote(uint256 hash);
+
     static const int MaxNumberOfVotes = 51;
 
 private:
@@ -68,6 +73,20 @@ private:
     bool Write(const std::string& strBlockHash);
     void Delete(const std::string& strBlockHash);
 
+    bool ProcessVote(CKeyID& voter, const std::set<CKeyID>& delegates, uint256 hash, uint64_t height);
+    bool ProcessCancelVote(CKeyID& voter, const std::set<CKeyID>& delegates, uint256 hash, uint64_t height);
+    bool ProcessRegister(CKeyID& delegate, const std::string& strDelegateName, uint256 hash, uint64_t height);
+    bool ProcessUnregister(CKeyID& delegate, const std::string& strDelegateName, uint256 hash, uint64_t height);
+
+    bool ProcessUndoVote(CKeyID& voter, const std::set<CKeyID>& delegates, uint256 hash, uint64_t height);
+    bool ProcessUndoCancelVote(CKeyID& voter, const std::set<CKeyID>& delegates, uint256 hash, uint64_t height);
+    bool ProcessUndoRegister(CKeyID& delegate, const std::string& strDelegateName, uint256 hash, uint64_t height);
+
+    bool ProcessVote(CKeyID& voter, const std::set<CKeyID>& delegates);
+    bool ProcessCancelVote(CKeyID& voter, const std::set<CKeyID>& delegates);
+    bool ProcessRegister(CKeyID& delegate, const std::string& strDelegateName);
+    bool ProcessUnregister(CKeyID& delegate, const std::string& strDelegateName);
+
 private:
     boost::shared_mutex lockVote;
 
@@ -75,14 +94,18 @@ private:
     std::map<CKeyID, std::set<CKeyID>> mapVoterDelegates;
     std::map<CKeyID, std::string> mapDelegateName;
     std::map<std::string, CKeyID> mapNameDelegate;
+    std::map<uint256, uint64_t>  mapHashHeightInvalidVote;
+    boost::shared_mutex lockMapHashHeightInvalidVote;
 
-    std::unordered_map<CKeyID, uint64_t, key_hash> mapAddressBalance;
+    //std::unordered_map<CKeyID, uint64_t, key_hash> mapAddressBalance;
+    std::unordered_map<CKeyID, int64_t, key_hash> mapAddressBalance;
 
     std::string strFilePath;
     std::string strDelegateFileName;
     std::string strVoteFileName;
     std::string strBalanceFileName;
     std::string strControlFileName;
+    std::string strInvalidVoteTxFileName;
     std::string strOldBlockHash;
     int64_t nOldBlockHeight;
 };
