@@ -9,7 +9,7 @@ Lightning Bitcoin (LBTC) is a fully decentralized Internet-of-value protocol for
 
 Lightning Bitcoin’s on-chain governance system enables LBTC holders to vote for the blockchain improvement proposals and the delegates who maintain the network as Lightning Nodes. It solves the problems of centralization of bitcoin by incorporating all participants in the Lightning Bitcoin ecosystem into the decision-making process.
 
-Lightning Bitcoin is forked from [Bitcoin Core](https://bitcoin.org/). And the official implementation of Lightning Bitcoin full node replaces PoW consensus of Bitcoin with DPoS, it means LBTC fully meets bitcoin standard expect consensus algorithm.
+Lightning Bitcoin is forked from [Bitcoin Core](https://bitcoin.org/). And the official implementation of Lightning Bitcoin full node replaces PoW consensus of Bitcoin with DPoS, it means LBTC fully meets bitcoin standard except for consensus algorithm.
 
 However, here are these differences:
 * DPoS
