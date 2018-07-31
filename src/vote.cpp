@@ -9,6 +9,8 @@
 typedef boost::shared_lock<boost::shared_mutex> read_lock;
 typedef boost::unique_lock<boost::shared_mutex> write_lock;
 
+using namespace std;
+
 Vote::Vote()
     : mapAddressBalance(100000000)
 {
@@ -23,6 +25,7 @@ Vote::~Vote()
 #define BALANCE_FILE "balance.dat"
 #define CONTROL_FILE "control.dat"
 #define INVALIDVOTETX_FILE "invalidvotetx.dat"
+#define DELEGATE_MULTIADDRESS_FILE "delegatemultiaddress.dat"
 
 bool Vote::Init(int64_t nBlockHeight, const std::string& strBlockHash)
 { 
@@ -34,6 +37,7 @@ bool Vote::Init(int64_t nBlockHeight, const std::string& strBlockHash)
     strBalanceFileName = strFilePath + "/" + BALANCE_FILE;
     strControlFileName = strFilePath + "/" + CONTROL_FILE;
     strInvalidVoteTxFileName = strFilePath + "/" + INVALIDVOTETX_FILE;
+    strDelegateMultiaddressName = strFilePath + "/" + DELEGATE_MULTIADDRESS_FILE;
 
     if(nBlockHeight == 0) {
         if(!boost::filesystem::is_directory(strFilePath)) {
@@ -51,6 +55,12 @@ bool Vote::ReadControlFile(int64_t& nBlockHeight, std::string& strBlockHash, con
     FILE *file = fopen(strFileName.c_str(), "r");
     if(file) {
         fscanf(file, "%ld\n", &nBlockHeight);
+
+        if(nBlockHeight < 0) {
+            nVersion = nBlockHeight;
+            fscanf(file, "%ld\n", &nBlockHeight);
+        }
+
         char buff[128];
         fscanf(file, "%s\n", buff);
         strBlockHash = buff;
@@ -67,6 +77,7 @@ bool Vote::WriteControlFile(int64_t nBlockHeight, const std::string& strBlockHas
     bool ret = false;
     FILE *file = fopen(strFileName.c_str(), "w");
     if(file) {
+        fprintf(file, "%ld\n", nCurrentVersion);
         fprintf(file, "%ld\n", nBlockHeight);
         fprintf(file, "%s\n", strBlockHash.c_str());
         fclose(file);
@@ -422,7 +433,7 @@ uint64_t Vote::_GetDelegateVotes(const CKeyID& delegate)
     auto it = mapDelegateVoters.find(delegate);
     if(it != mapDelegateVoters.end()) {
         for(auto item : it->second) {
-            votes += _GetAddressBalance(item);
+            votes += _GetAddressBalance(CMyAddress(item, CChainParams::PUBKEY_ADDRESS));
         }
     }
 
@@ -526,6 +537,21 @@ std::set<CKeyID> Vote::GetVotedDelegates(CKeyID& delegate)
     return s;
 }
 
+uint64_t Vote::GetDelegateFunds(const CMyAddress& address)
+{
+    uint64_t ret = _GetAddressBalance(address);
+
+    auto&& i = GetDelegateMultiaddress(address);
+    for(auto& j : i) {
+        auto r = _GetAddressBalance(j.first);
+        if(r > ret) {
+            ret = r;
+        }
+    }
+
+    return ret;
+}
+
 std::vector<Delegate> Vote::GetTopDelegateInfo(uint64_t nMinHoldBalance, uint32_t nDelegateNum)
 {
     read_lock r(lockVote);
@@ -534,14 +560,14 @@ std::vector<Delegate> Vote::GetTopDelegateInfo(uint64_t nMinHoldBalance, uint32_
     for(auto item : mapDelegateVoters)
     {
         uint64_t votes = _GetDelegateVotes(item.first);
-        if(_GetAddressBalance(item.first) >= nMinHoldBalance) {
+        if(GetDelegateFunds(CMyAddress(item.first, CChainParams::PUBKEY_ADDRESS)) >= nMinHoldBalance) {
             delegates.insert(std::make_pair(votes, item.first));
         }
     }
 
     for(auto it = mapDelegateName.rbegin(); it != mapDelegateName.rend(); ++it)
     {
-        if(_GetAddressBalance(it->first) < nMinHoldBalance) {
+        if(GetDelegateFunds(CMyAddress(it->first, CChainParams::PUBKEY_ADDRESS)) < nMinHoldBalance) {
             continue;
         }
 
@@ -624,8 +650,27 @@ bool Vote::Write(const std::string& strBlockHash)
         balance = item.second;
         if(balance == 0)
             continue;
-        fwrite(item.first.begin(), sizeof(item.first), 1, file);
+        fwrite(&item.first.second, sizeof(item.first.second), 1, file);
+        fwrite(item.first.first.begin(), sizeof(item.first.first), 1, file);
         fwrite(&balance, sizeof(balance), 1, file);
+    }
+    fclose(file);
+
+    file = fopen((strDelegateMultiaddressName + "-" + strBlockHash).c_str(), "wb");
+    for(auto item : mapDelegateMultiaddress)
+    {
+        fwrite(&item.first.second, sizeof(item.first.second), 1, file);
+        fwrite(item.first.first.begin(), sizeof(item.first.first), 1, file);
+
+        count = item.second.size();
+        fwrite(&count, sizeof(count), 1, file);
+        for(auto i : item.second) {
+            fwrite(&i.first.second, sizeof(i.first.second), 1, file);
+            fwrite(i.first.first.begin(), sizeof(i.first.first), 1, file);
+
+            auto strHash = i.second.GetHex();
+            fwrite(strHash.c_str(), strHash.length(), 1, file);
+        }
     }
     fclose(file);
 
@@ -745,28 +790,71 @@ bool Vote::Read()
     if(file) {
     while(1)
     {
+        uint8_t type = CChainParams::PUBKEY_ADDRESS;
+        if(nVersion < 0) {
+            if(fread(&type, sizeof(type), 1, file) <= 0) {
+                break;
+            }
+        }
+
         if(fread(&buff[0], sizeof(buff), 1, file) <= 0) {
             break;    
         }
 
-        CKeyID address(uint160(std::vector<unsigned char>(&buff[0], &buff[0] + sizeof(buff))));
         fread(&balance, sizeof(balance), 1, file);
-
-        mapAddressBalance[address] = balance;
+        uint160 address(uint160(std::vector<unsigned char>(&buff[0], &buff[0] + sizeof(buff))));
+        mapAddressBalance[CMyAddress(address, type)] = balance;
     }
     fclose(file);
     }
 
+    file = fopen((strDelegateMultiaddressName + "-" + strOldBlockHash).c_str(), "rb");
+    if(file) {
+    while(1)
+    {
+        uint8_t type = CChainParams::PUBKEY_ADDRESS;
+        if(fread(&type, sizeof(type), 1, file) <= 0) {
+            break;
+        }
+
+        fread(&buff[0], sizeof(buff), 1, file);
+
+        CKeyID delegate(uint160(std::vector<unsigned char>(&buff[0], &buff[0] + sizeof(buff))));
+        auto& multiAddress = mapDelegateMultiaddress[make_pair(delegate, type)];
+
+        fread(&count, sizeof(count), 1, file);
+        for(unsigned int i =0; i < count; ++i) {
+            if(fread(&type, sizeof(type), 1, file) <= 0) {
+                break;
+            }
+
+            fread(&buff[0], sizeof(buff), 1, file);
+
+            CKeyID delegate(uint160(std::vector<unsigned char>(&buff[0], &buff[0] + sizeof(buff))));
+
+            if(fread(&buff[0], 64, 1, file) <= 0) {
+                break;
+            }
+            uint256 hash;
+            hash.SetHex((const char*)&buff[0]);
+
+            multiAddress[make_pair(delegate, type)] = hash;
+        }
+    }
+    fclose(file);
+    }
+
+
     return true;
 }
 
-uint64_t Vote::GetAddressBalance(const CKeyID& address)
+uint64_t Vote::GetAddressBalance(const CMyAddress& address)
 {
     read_lock r(lockVote);
     return _GetAddressBalance(address);
 }
 
-uint64_t Vote::_GetAddressBalance(const CKeyID& address)
+uint64_t Vote::_GetAddressBalance(const CMyAddress& address)
 {
     auto it = mapAddressBalance.find(address);
     if(it != mapAddressBalance.end()) {
@@ -776,10 +864,10 @@ uint64_t Vote::_GetAddressBalance(const CKeyID& address)
     }
 }
 
-void Vote::UpdateAddressBalance(const std::vector<std::pair<CKeyID, int64_t>>& vAddressBalance)
+void Vote::UpdateAddressBalance(const std::vector<std::pair<CMyAddress, int64_t>>& vAddressBalance)
 {
     write_lock w(lockVote);
-    std::map<CKeyID, int64_t> mapBalance;
+    std::map<CMyAddress, int64_t> mapBalance;
     for(auto iter : vAddressBalance) {
         if (iter.second == 0)
             continue;
@@ -795,7 +883,7 @@ void Vote::UpdateAddressBalance(const std::vector<std::pair<CKeyID, int64_t>>& v
     return;
 }
 
-uint64_t Vote::_UpdateAddressBalance(const CKeyID& address, int64_t value)
+uint64_t Vote::_UpdateAddressBalance(const CMyAddress& address, int64_t value)
 {
     int64_t balance = 0;
 
@@ -851,4 +939,64 @@ bool Vote::FindInvalidVote(uint256 hash)
 {
     read_lock r(lockMapHashHeightInvalidVote);
     return mapHashHeightInvalidVote.find(hash) != mapHashHeightInvalidVote.end();
+}
+
+std::map<CMyAddress, uint256> Vote::GetDelegateMultiaddress(const CMyAddress& delegate)
+{
+    read_lock r(lockVote);
+
+    auto it = mapDelegateMultiaddress.find(delegate);
+    if(it != mapDelegateMultiaddress.end()) {
+        return mapDelegateMultiaddress[delegate];
+    } else {
+        return std::map<CMyAddress, uint256>();
+    }
+}
+
+bool Vote::AddDelegateMultiaddress(const CMyAddress& delegate, const CMyAddress& multiAddress, const uint256& txid)
+{
+    bool ret = false;
+    write_lock r(lockVote);
+
+    if(mapDelegateName.find(delegate.first) == mapDelegateName.end())
+        return false;
+
+
+    auto it = mapDelegateMultiaddress.find(delegate);
+    if(it != mapDelegateMultiaddress.end()) {
+        auto i = it->second.find(multiAddress);
+        if(i == it->second.end()) {
+            it->second.insert(std::make_pair(multiAddress, txid));
+            ret = true;
+        }
+    } else {
+        auto& i = mapDelegateMultiaddress[delegate];
+        i[multiAddress] = txid;
+        ret = true;
+    }
+
+    return ret;
+}
+
+bool Vote::DelDelegateMultiaddress(const CMyAddress& delegate, const CMyAddress& multiAddress, const uint256& txid)
+{
+    bool ret = false;
+    write_lock r(lockVote);
+
+    auto it = mapDelegateMultiaddress.find(delegate);
+    if(it != mapDelegateMultiaddress.end()) {
+        auto i = it->second.find(multiAddress);
+        if(i != it->second.end()) {
+            if(i->second == txid) {
+                it->second.erase(i);
+
+                if(it->second.empty()) {
+                    mapDelegateMultiaddress.erase(it);
+                }
+                ret = true;
+            }
+        }
+    }
+
+    return ret;
 }

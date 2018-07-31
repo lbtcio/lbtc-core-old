@@ -56,6 +56,8 @@
 # error "Bitcoin cannot be compiled without assertions."
 #endif
 
+using namespace std;
+
 /**
  * Global state
  */
@@ -85,20 +87,6 @@ int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 
 
-//CCriticalSection cs_WitnessShare;
-//std::unordered_map<CKeyID, uint64_t, key_hash> mapAddressShare;
-
-struct uint256_hash
-{
-    std::size_t operator()(uint256 const& k) const
-    {
-        std::size_t hash = 0 ;
-        boost::hash_range( hash, k.begin(), k.end() ) ;
-        return hash ;
-    }
-};
-
-void PutTxoutCache(const CTxOut& txout, const uint256 &txid, uint32_t nTxoutIndex);
 bool DoVoting(const CBlock& block, uint32_t nHeight, std::map<uint256, uint64_t>& mapTxFee);
 void ProcessDPoSConnectBlock(const CBlock& block, uint64_t nBlockHeight);
 void ProcessDPoSDisconnectBlock(const CBlock& block, uint64_t nBlockHeight);
@@ -1429,6 +1417,86 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
     return pindexPrev->nHeight + 1;
 }
 
+typedef std::pair<uint256, uint32_t> TxoutKey;
+typedef const TxoutKey* TxoutKeyPtr;
+typedef std::shared_ptr<CTxOut> TxOutPtr;
+
+struct txoutkey_hash
+{
+    std::size_t operator()(TxoutKeyPtr k) const
+    {
+        std::size_t hash = 0;
+        boost::hash_range( hash, k->first.begin(), k->first.end() );
+        hash += k->second;
+        return hash;
+    }
+};
+
+struct txoutkey_equal
+{
+    bool operator()(TxoutKeyPtr a, TxoutKeyPtr b) const
+    {
+        return a->first == b->first && a->second == b->second;
+    }
+};
+
+std::unordered_map<TxoutKeyPtr, TxOutPtr, txoutkey_hash, txoutkey_equal> mapHashTxout(250000);
+CCriticalSection cs_mapHashTxout;
+const uint32_t maxIndexVctTxoutKey = 50000;
+vector<TxoutKey> vctTxoutKey(maxIndexVctTxoutKey);
+uint32_t indexVctTxoutKey;
+bool fVctTxoutKeyFull = false;
+
+void PutTxoutCache(const TxoutKey& key, const CTxOut& txout)
+{
+    LOCK(cs_mapHashTxout);
+
+    if(mapHashTxout.find(&key) == mapHashTxout.end()) {
+        if(fVctTxoutKeyFull) {
+            mapHashTxout.erase(&vctTxoutKey[indexVctTxoutKey]);
+        }
+
+        vctTxoutKey[indexVctTxoutKey] = key;
+        mapHashTxout[&vctTxoutKey[indexVctTxoutKey]] = make_shared<CTxOut>(txout);
+
+        if(++indexVctTxoutKey == maxIndexVctTxoutKey) {
+            indexVctTxoutKey = 0;
+            fVctTxoutKeyFull = true;
+        }
+    }
+
+    return;
+}
+
+TxOutPtr GetTxoutCache(const TxoutKey& key)
+{
+    LOCK(cs_mapHashTxout);
+
+    auto it = mapHashTxout.find(&key);
+    if(it != mapHashTxout.end()) {
+        return it->second;
+    } else {
+        return TxOutPtr();
+    }
+}
+
+TxOutPtr GetTxout(const uint256 &txid, uint32_t nTxoutIndex)
+{
+    TxOutPtr txout = GetTxoutCache(make_pair(txid, nTxoutIndex));
+
+    if(!txout) {
+        LogPrintf("GetTxoutCache txid:%s nTxoutIndex:%ld failed\n", txid.ToString().c_str(), nTxoutIndex);
+        CTransactionRef tx;
+        uint256 hashBlock;
+
+        if (GetTransaction(txid, tx, Params().GetConsensus(), hashBlock, true)) {
+            txout = make_shared<CTxOut>(tx->vout[nTxoutIndex]);
+        }
+    }
+
+    return txout;
+}
+
 namespace Consensus {
 bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight)
 {
@@ -1445,7 +1513,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
             const CCoins *coins = inputs.AccessCoins(prevout.hash);
             assert(coins);
 
-            PutTxoutCache(coins->vout[prevout.n], prevout.hash, prevout.n);
+            PutTxoutCache(make_pair(prevout.hash, prevout.n), coins->vout[prevout.n]);
 
             // If prev is coinbase, check that it's matured
             if (coins->IsCoinBase()) {
@@ -4833,95 +4901,61 @@ bool RepairDPoSData(int64_t nOldBlockHeight, const std::string& strOldBlockHash)
     return true;
 }
 
-//std::map<uint256, std::map<uint32_t, CTxOut>> mapHashTxout;
-std::unordered_map<uint256, std::map<uint32_t, CTxOut>, uint256_hash> mapHashTxout(500000);
-uint32_t countMapHashTxout = 0;
-std::list<std::pair<uint256, uint32_t>> listTxout;
-CCriticalSection cs_mapHashTxout;
-
-void PutTxoutCache(const CTxOut& txout, const uint256 &txid, uint32_t nTxoutIndex)
+void ProcessMultiSigTx(const CScript& script, uint256 txid, bool fIsAdd)
 {
-    LOCK(cs_mapHashTxout);
-
-    bool fSuccess = false;
-    auto it = mapHashTxout.find(txid);
-    if(it != mapHashTxout.end()) {
-        auto item = it->second.find(nTxoutIndex);
-        if(item != it->second.end()) {
-            it->second[nTxoutIndex] = txout;
-            fSuccess = true;
-        }
-    } else {
-        std::map<uint32_t, CTxOut> t;
-        t[nTxoutIndex] = txout;
-        mapHashTxout[txid] = t;
-        fSuccess = true;
+    if(script[script.size()-1] != 0xae
+        || script[script.size()-2] != 0x52) {
+        return;
     }
 
-    if(fSuccess) {
-        ++countMapHashTxout;
-        listTxout.push_back(std::make_pair(txid, nTxoutIndex));
+    CScript::const_iterator pc = script.begin();
+    CScript::const_iterator pend = script.end();
+    opcodetype opcode;
+	
+    std::vector<unsigned char> vchPushValue;
+    script.GetOp(pc, opcode, vchPushValue);
+    script.GetOp(pc, opcode, vchPushValue);
+    script.GetOp(pc, opcode, vchPushValue);
+    script.GetOp(pc, opcode, vchPushValue);
 
-        if(countMapHashTxout > (uint64_t)40000 * DPoS::GetInstance().GetMaxMemory()) {
-        //if(countMapHashTxout > (uint64_t)2 * DPoS::GetInstance().GetMaxMemory()) {
-            uint32_t nLoop = countMapHashTxout >> 4;
-            for(uint32_t i = 0; i < nLoop; ++i) {
-                auto& item = listTxout.front();
-                auto& set = mapHashTxout[item.first];
-                if(set.size() == 1) {
-                    mapHashTxout.erase(item.first);
-                } else {
-                    set.erase(item.second);
-                }
+    if(pc == pend && vchPushValue[0] == 0x52) {
+        CScriptID scriptid(CScript(vchPushValue.begin(), vchPushValue.end()));
+        CBitcoinAddress multiAddress;
+        multiAddress.Set(scriptid);
 
-                listTxout.pop_front();
-                --countMapHashTxout;
+        CPubKey pubkey(&vchPushValue[2], &vchPushValue[2] + vchPushValue[1]);
+        CBitcoinAddress address;
+        address.Set(pubkey.GetID());
+
+        if(fIsAdd) {
+            if(Vote::GetInstance().AddDelegateMultiaddress(std::make_pair(pubkey.GetID(), CChainParams::PUBKEY_ADDRESS), std::make_pair(scriptid, CChainParams::SCRIPT_ADDRESS), txid)) {
+                LogPrintf("MultiSignTx Hash:%s Add address:%s mutiladdress:%s succes\n", txid.ToString().c_str(), address.ToString().c_str(), multiAddress.ToString().c_str());
+            } else {
+                //LogPrintf("MultiSignTx Hash:%s Add address:%s mutiladdress:%s failed\n", txid.ToString().c_str(), address.ToString().c_str(), multiAddress.ToString().c_str());
             }
-
-            LogPrintf("PutTxoutCache clear cache countMapHashTxout:%u mapHashTxout.size:%u nLoop:%u\n", countMapHashTxout, mapHashTxout.size(), nLoop);
+        } else {
+            if(Vote::GetInstance().DelDelegateMultiaddress(std::make_pair(pubkey.GetID(), CChainParams::PUBKEY_ADDRESS), std::make_pair(scriptid, CChainParams::SCRIPT_ADDRESS), txid)) {
+                LogPrintf("MultiSignTx Hash:%s Del address:%s mutiladdress:%s succes\n", txid.ToString().c_str(), address.ToString().c_str(), multiAddress.ToString().c_str());
+            } else {
+            //LogPrintf("MultiSignTx Hash:%s Del address:%s mutiladdress:%s failed\n", txid.ToString().c_str(), address.ToString().c_str(), multiAddress.ToString().c_str());
+            }
         }
+
     }
-    return;
 }
 
-bool GetTxoutCache(CTxOut& txout, const uint256 &txid, uint32_t nTxoutIndex)
+bool ExtractAddress(const CScript& script, CMyAddress& address)
 {
     bool ret = false;
-    LOCK(cs_mapHashTxout);
-
-    auto it = mapHashTxout.find(txid);
-    if(it != mapHashTxout.end()) {
-        auto& m = it->second;
-        auto out = m.find(nTxoutIndex);
-        if(out != m.end()) {
-            txout = out->second;
-            ret = true;
-        }
-    }
-
-#ifdef whh
-    if(mapHashTxout.size() > (uint64_t)5000 * DPoS::GetInstance().GetMaxMemory()) {
-        mapHashTxout.clear();
-    }
-#endif
-
-    return ret;
-}
-
-bool GetTxout(CTxOut& txout, const uint256 &txid, uint32_t nTxoutIndex)
-{
-    if(GetTxoutCache(txout, txid, nTxoutIndex)) {
-        return true;
-    }
-
-    bool ret = false;
-    CTransactionRef tx;
-    uint256 hashBlock;
-
-    if (GetTransaction(txid, tx, Params().GetConsensus(), hashBlock, true))
-    {
-        txout = tx->vout[nTxoutIndex];
+    CTxDestination dest;
+    if(ExtractDestination(script, dest)) {
         ret = true;
+
+        if(dest.type() == typeid(CKeyID)) {
+            address = CMyAddress(boost::get<CKeyID>(dest), CChainParams::PUBKEY_ADDRESS);
+        } else if(dest.type() == typeid(CScriptID)) {
+            address = CMyAddress(boost::get<CScriptID>(dest), CChainParams::SCRIPT_ADDRESS);
+        }
     }
 
     return ret;
@@ -4929,7 +4963,8 @@ bool GetTxout(CTxOut& txout, const uint256 &txid, uint32_t nTxoutIndex)
 
 void CalculateBalance(const CBlock& block, bool fIsAdd, std::map<uint256, uint64_t>* mapTxFee)
 {
-    std::vector<std::pair<CKeyID, int64_t>> addressBalances;
+    CMyAddress address;
+    std::vector<std::pair<CMyAddress, int64_t>> addressBalances;
 
     for (auto t:block.vtx)
     {
@@ -4939,15 +4974,16 @@ void CalculateBalance(const CBlock& block, bool fIsAdd, std::map<uint256, uint64
             CTransactionRef tx;
             uint256 hashBlock;
 
-            CTxOut txout;
-            if(i.prevout.hash.IsNull() == false && GetTxout(txout, i.prevout.hash, i.prevout.n)) {
-                fee += txout.nValue;
+            TxOutPtr txout;
+            if(i.prevout.hash.IsNull() == false && (txout = GetTxout(i.prevout.hash, i.prevout.n))) {
+                fee += txout->nValue;
+                int64_t value = static_cast<int64_t>(txout->nValue);
 
-                CTxDestination address;
-                if (ExtractDestination(txout.scriptPubKey, address)) {
-                    int64_t value = static_cast<int64_t>(txout.nValue);
-                    if(address.type() == typeid(CKeyID)) {
-                        addressBalances.push_back(std::make_pair(boost::get<CKeyID>(address), fIsAdd ? 0 - value : value));
+                if(ExtractAddress(txout->scriptPubKey, address)) {
+                    addressBalances.push_back(std::make_pair(address, fIsAdd ? 0 - value : value));
+
+                    if(address.second == CChainParams::SCRIPT_ADDRESS) {
+                        ProcessMultiSigTx(i.scriptSig, t->GetHash(), fIsAdd);
                     }
                 }
             }
@@ -4956,12 +4992,9 @@ void CalculateBalance(const CBlock& block, bool fIsAdd, std::map<uint256, uint64
         for(auto& v:t->vout)
         {
             fee -= v.nValue;
-            CTxDestination address;
-            if ((!ExtractDestination(v.scriptPubKey, address)))
-                continue;
 
-            if(address.type() == typeid(CKeyID)) {
-                addressBalances.push_back(std::make_pair(boost::get<CKeyID>(address), fIsAdd ? v.nValue : 0 - v.nValue));
+            if(ExtractAddress(v.scriptPubKey, address)) {
+                addressBalances.push_back(std::make_pair(address, fIsAdd ? v.nValue : 0 - v.nValue));
             }
         }
 

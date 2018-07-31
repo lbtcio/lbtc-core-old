@@ -3391,14 +3391,16 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
     CBitcoinAddress address(request.params[0].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
-//    uint64_t nShare;
-    CKeyID key;
-    if(address.GetKeyID(key) && key.IsNull() == false) {
-        uint64_t balance = Vote::GetInstance().GetAddressBalance(key);
-        return UniValue(balance);
+
+    uint64_t balance = 0;
+    CTxDestination key = address.Get();
+    if(address.IsScript()) {
+        balance = Vote::GetInstance().GetAddressBalance(CMyAddress(boost::get<CScriptID>(key), CChainParams::SCRIPT_ADDRESS));
     } else {
-        return UniValue(0);
+        balance = Vote::GetInstance().GetAddressBalance(CMyAddress(boost::get<CKeyID>(key), CChainParams::PUBKEY_ADDRESS));
     }
+
+    return UniValue(balance);
 }
 
 UniValue getdelegatevotes(const JSONRPCRequest& request)
@@ -3429,6 +3431,39 @@ UniValue getdelegatevotes(const JSONRPCRequest& request)
     uint64_t nShare{0};
     CKeyID key = vote.GetDelegate(request.params[0].get_str());
     nShare = Vote::GetInstance().GetDelegateVotes(key);
+
+    UniValue entry(nShare);
+    return entry;
+}
+
+UniValue getdelegatefunds(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+            "getdelegatefunds delegateName\n"
+            "\nget delegate the number of funds.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"delegateName\"      (string, required) The delegate name.\n"
+            "\nResult:\n"
+            "\"number\"               (numeric) The number of funds.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getdelegatefunds", "\"delegateName\"")
+            + HelpExampleRpc("getdelegatefunds", "\"delegateName\"")
+        );
+
+    Vote &vote = Vote::GetInstance();
+
+    if(!vote.HaveDelegate(request.params[0].get_str())) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("delegate name: ") + request.params[0].get_str() + string(" not registe"));
+    }
+
+    uint64_t nShare{0};
+    CKeyID key = vote.GetDelegate(request.params[0].get_str());
+    nShare = Vote::GetInstance().GetDelegateFunds(std::make_pair(key, CChainParams::PUBKEY_ADDRESS));
 
     UniValue entry(nShare);
     return entry;
@@ -3612,6 +3647,7 @@ static const CRPCCommand commands[] =
     { "dpos",               "cancelvote",               &cancelvote,               true,   {"cancelvote", "fromaddress", "delegatename"} },
     { "dpos",               "listdelegates",            &listdelegates,            true,   {"listdelegates"} },
     { "dpos",               "getdelegatevotes",         &getdelegatevotes,         true,   {"getdelegatevotes", "delegatename"} },
+    { "dpos",               "getdelegatefunds",         &getdelegatefunds,         true,   {"getdelegatefunds", "delegatename"} },
     { "dpos",               "listvoteddelegates",       &listvoteddelegates,       true,   {"listvoteddelegates", "address"} },
     { "dpos",               "listreceivedvotes",        &listreceivedvotes,        true,   {"listreceivedvotes", "delegatename"} },
 };

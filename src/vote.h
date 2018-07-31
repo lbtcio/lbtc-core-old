@@ -7,15 +7,16 @@
 #include <unordered_map>
 #include <map>
 #include <set>
-#include <string>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/filesystem.hpp>
 
+typedef std::pair<uint160, uint8_t> CMyAddress;
+
 struct key_hash
 {
-    std::size_t operator()(CKeyID const& k) const {
+    std::size_t operator()(CMyAddress const& k) const {
         std::size_t hash = 0;
-        boost::hash_range( hash, k.begin(), k.end() );
+        boost::hash_range( hash, k.first.begin(), k.first.end() );
         return hash;
     }
 };
@@ -40,8 +41,8 @@ public:
     bool Store(int64_t height, const std::string& strBlockHash);
     bool Load(int64_t height, const std::string& strBlockHash);
 
-    uint64_t GetAddressBalance(const CKeyID& id);
-    void UpdateAddressBalance(const std::vector<std::pair<CKeyID, int64_t>>& addressBalances);
+    uint64_t GetAddressBalance(const CMyAddress& id);
+    void UpdateAddressBalance(const std::vector<std::pair<CMyAddress, int64_t>>& addressBalances);
 
     CKeyID GetDelegate(const std::string& name);
     std::string GetDelegate(CKeyID keyid);
@@ -58,12 +59,18 @@ public:
     void DeleteInvalidVote(uint64_t height);
     bool FindInvalidVote(uint256 hash);
 
+    bool AddDelegateMultiaddress(const CMyAddress& delegate, const CMyAddress& multiAddress, const uint256& txid);
+    bool DelDelegateMultiaddress(const CMyAddress& delegate, const CMyAddress& multiAddress, const uint256& txid);
+    std::map<CMyAddress, uint256> GetDelegateMultiaddress(const CMyAddress& delegate);
+
+
     static const int MaxNumberOfVotes = 51;
+    uint64_t GetDelegateFunds(const CMyAddress& address);
 
 private:
-    uint64_t _GetAddressBalance(const CKeyID& address);
+    uint64_t _GetAddressBalance(const CMyAddress& address);
+    uint64_t _UpdateAddressBalance(const CMyAddress& id, int64_t value);
     uint64_t _GetDelegateVotes(const CKeyID& delegate);
-    uint64_t _UpdateAddressBalance(const CKeyID& id, int64_t value);
 
     bool RepairFile(int64_t nBlockHeight, const std::string& strBlockHash);
     bool ReadControlFile(int64_t& nBlockHeight, std::string& strBlockHash, const std::string& strFileName);
@@ -87,7 +94,13 @@ private:
     bool ProcessRegister(CKeyID& delegate, const std::string& strDelegateName);
     bool ProcessUnregister(CKeyID& delegate, const std::string& strDelegateName);
 
+    std::map<CMyAddress, std::map<CMyAddress, uint256>>& GetDelegateMultiaddress() {return mapDelegateMultiaddress;}
+    bool IsValidDelegate(const CMyAddress& address, uint64_t nMinHoldBalance);
+
+
 private:
+    int64_t nVersion;
+    const int64_t nCurrentVersion = -1;
     boost::shared_mutex lockVote;
 
     std::map<CKeyID, std::set<CKeyID>> mapDelegateVoters;
@@ -97,8 +110,9 @@ private:
     std::map<uint256, uint64_t>  mapHashHeightInvalidVote;
     boost::shared_mutex lockMapHashHeightInvalidVote;
 
-    //std::unordered_map<CKeyID, uint64_t, key_hash> mapAddressBalance;
-    std::unordered_map<CKeyID, int64_t, key_hash> mapAddressBalance;
+    std::unordered_map<CMyAddress, uint64_t, key_hash> mapAddressBalance;
+
+    std::map<CMyAddress, std::map<CMyAddress, uint256>> mapDelegateMultiaddress;
 
     std::string strFilePath;
     std::string strDelegateFileName;
@@ -106,6 +120,8 @@ private:
     std::string strBalanceFileName;
     std::string strControlFileName;
     std::string strInvalidVoteTxFileName;
+    std::string strDelegateMultiaddressName;
+
     std::string strOldBlockHash;
     int64_t nOldBlockHeight;
 };

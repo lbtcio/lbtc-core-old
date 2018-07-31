@@ -872,12 +872,12 @@ DelegateInfo DPoS::GetNextDelegates(int64_t t)
     uint64_t nLoopIndex = GetLoopIndex(t);
     uint64_t nMinHoldBalance = 0;
     if(Params().NetworkIDString() == "main") {
-        if(nLoopIndex >= 47169) {
+        if(nLoopIndex >= 52872) {
             nMinHoldBalance = 500000000000;
         }
     } else {
-        if(nLoopIndex >= 277019) {
-            nMinHoldBalance = 1000000000000;
+        if(nLoopIndex >= 305528) {
+            nMinHoldBalance = 500000000000;
         }
     }
 
@@ -1200,6 +1200,7 @@ bool DPoS::CheckBlockHeader(const CBlockHeader& block)
         return true;
     }
 
+    if(Params().NetworkIDString() == "main") {
     int r = FastCheckBlockHash(block);
     if(r < 0)
         return false;
@@ -1209,6 +1210,7 @@ bool DPoS::CheckBlockHeader(const CBlockHeader& block)
     if(block.nTime > time(NULL) + 3) {
         return false;
     } 
+    }
     
     BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
     if (mi != mapBlockIndex.end()) {
