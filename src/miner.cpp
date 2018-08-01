@@ -897,7 +897,7 @@ DelegateInfo DPoS::GetNextDelegates(int64_t t)
 
     DelegateInfo cDelegateInfo;
     if(Params().NetworkIDString() == "main") {
-        if(nLoopIndex >= 47169) {
+        if(nLoopIndex >= 52872) {
             cDelegateInfo.delegates = SortDelegate(delegates);
         } else {
             cDelegateInfo.delegates = delegates;
