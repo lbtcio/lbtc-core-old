@@ -324,8 +324,10 @@ std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
     return s;
 }
 
+#ifndef OS_WIN
 #include <pthread.h>
 #include <unistd.h>
+#endif
 
 CCriticalSection cs_mining;
 bool fIsDelegating = false;
@@ -374,10 +376,14 @@ void* ThreadDelegating(void *arg)
                     LogPrintf("ProcessNewBlock failed");
                 }
 
-                printf("mining addr:%s height:%u time:%lu starttime:%lu...\n", addr.c_str(), chainActive.Height(), t, DPoS::GetInstance().GetStartTime());
+                printf("mining addr:%s height:%u time:%llu starttime:%llu...\n", addr.c_str(), chainActive.Height(), t, DPoS::GetInstance().GetStartTime());
             }
         } while(0);
+#ifdef OS_WIN
+        Sleep(1000);//unit millisecond
+#else
         sleep(1);
+#endif
     }
     return NULL;
 }
@@ -416,8 +422,8 @@ UniValue startforging(const JSONRPCRequest& request)
     LOCK(cs_mining);
     if(fIsDelegating == false) {
         fIsDelegating = true;
-        pthread_t id;
-        pthread_create(&id, NULL, ThreadDelegating, NULL);
+		std::string stdCmd;//pthread_t id;
+        boost::thread forging(ThreadDelegating, (void*)&stdCmd);/*pthread_create(&id, NULL, ThreadDelegating, NULL);//start forging thread*/
     }
 
     return "true";

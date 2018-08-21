@@ -1297,8 +1297,10 @@ bool DPoS::CheckBlock(const CBlock& block, bool fIsCheckDelegateInfo)
         return true;
     }
     
-    if(CheckTransactionVersion(block) == false) 
+    if (CheckTransactionVersion(block) == false) {
+        LogPrintf("CheckBlock CheckTransactionVersion error\n");
         return false;
+    }
 
     if(CheckCoinbase(*block.vtx[0], block.nTime, nBlockHeight) == false) {
         LogPrintf("CheckBlock CheckCoinbase error\n");
@@ -1332,6 +1334,7 @@ bool DPoS::CheckBlock(const CBlock& block, bool fIsCheckDelegateInfo)
     if(nBlockHeight == nDposStartHeight) {
         if(fIsCheckDelegateInfo) {
             if(CheckBlockDelegate(block) == false) {
+                LogPrintf("CheckBlock CheckBlockDelegate error, nBlockHeight[%d], nDposStartHeight[%d]\n", nBlockHeight, nDposStartHeight);
                 return false;
             }
         }
@@ -1343,6 +1346,7 @@ bool DPoS::CheckBlock(const CBlock& block, bool fIsCheckDelegateInfo)
     } else if(nCurrentLoopIndex > nPrevLoopIndex) {
         if(fIsCheckDelegateInfo) {
             if(CheckBlockDelegate(block) == false) {
+                LogPrintf("CheckBlock CheckBlockDelegate error, nCurrentLoopIndex[%d] > nPrevLoopIndex[%d]\n", nCurrentLoopIndex, nPrevLoopIndex);
                 return false;
             }
             ProcessIrreversibleBlock(nBlockHeight, block.GetHash());
@@ -1443,7 +1447,7 @@ bool DPoS::ReadIrreversibleBlockInfo(IrreversibleBlockInfo& info)
 		uint256 hash;
 
        while(fgets(line, sizeof(line), file)) {
-      		if(sscanf(line, "%ld;%s\n", &height, buff) > 0) {
+      		if(sscanf(line, "%lld;%s\n", &height, buff) > 0) {
 				hash.SetHex(buff);
 				AddIrreversibleBlock(height, hash);
 			}
@@ -1470,7 +1474,7 @@ bool DPoS::WriteIrreversibleBlockInfo(const IrreversibleBlockInfo& info)
     FILE *file = fopen(strIrreversibleBlockFileName.c_str(), "w");
     if(file) {
 		for(auto& it : cIrreversibleBlockInfo.mapHeightHash) {
-        	fprintf(file, "%ld;%s\n", it.first, it.second.ToString().c_str());
+        	fprintf(file, "%lld;%s\n", it.first, it.second.ToString().c_str());
 		}
         fclose(file);
         ret = true;

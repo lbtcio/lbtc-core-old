@@ -101,7 +101,7 @@ class CVectorWriter
     void write(const char* pch, size_t nSize)
     {
         assert(nPos <= vchData.size());
-        size_t nOverwrite = std::min(nSize, vchData.size() - nPos);
+		size_t nOverwrite = (std::min)(nSize, vchData.size() - nPos);
         if (nOverwrite) {
             memcpy(vchData.data() + nPos, reinterpret_cast<const unsigned char*>(pch), nOverwrite);
         }

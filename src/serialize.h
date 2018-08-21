@@ -212,9 +212,9 @@ template<typename Stream> inline void Unserialize(Stream& s, bool& a) { char f=s
 inline unsigned int GetSizeOfCompactSize(uint64_t nSize)
 {
     if (nSize < 253)             return sizeof(unsigned char);
-    else if (nSize <= std::numeric_limits<unsigned short>::max()) return sizeof(unsigned char) + sizeof(unsigned short);
-    else if (nSize <= std::numeric_limits<unsigned int>::max())  return sizeof(unsigned char) + sizeof(unsigned int);
-    else                         return sizeof(unsigned char) + sizeof(uint64_t);
+	else if (nSize <= (std::numeric_limits<unsigned short>::max)()) return sizeof(unsigned char) + sizeof(unsigned short);
+    else if (nSize <= (std::numeric_limits<unsigned int>::max)())  return sizeof(unsigned char) + sizeof(unsigned int);
+    else return sizeof(unsigned char) + sizeof(uint64_t);
 }
 
 inline void WriteCompactSize(CSizeComputer& os, uint64_t nSize);
@@ -226,12 +226,12 @@ void WriteCompactSize(Stream& os, uint64_t nSize)
     {
         ser_writedata8(os, nSize);
     }
-    else if (nSize <= std::numeric_limits<unsigned short>::max())
+	else if (nSize <= (std::numeric_limits<unsigned short>::max)())
     {
         ser_writedata8(os, 253);
         ser_writedata16(os, nSize);
     }
-    else if (nSize <= std::numeric_limits<unsigned int>::max())
+	else if (nSize <= (std::numeric_limits<unsigned int>::max)())
     {
         ser_writedata8(os, 254);
         ser_writedata32(os, nSize);
@@ -601,7 +601,7 @@ void Unserialize_impl(Stream& is, prevector<N, T>& v, const unsigned char&)
     unsigned int i = 0;
     while (i < nSize)
     {
-        unsigned int blk = std::min(nSize - i, (unsigned int)(1 + 4999999 / sizeof(T)));
+		unsigned int blk = (std::min)(nSize - i, (unsigned int)(1 + 4999999 / sizeof(T)));
         v.resize(i + blk);
         is.read((char*)&v[i], blk * sizeof(T));
         i += blk;
@@ -669,7 +669,7 @@ void Unserialize_impl(Stream& is, std::vector<T, A>& v, const unsigned char&)
     unsigned int i = 0;
     while (i < nSize)
     {
-        unsigned int blk = std::min(nSize - i, (unsigned int)(1 + 4999999 / sizeof(T)));
+		unsigned int blk = (std::min)(nSize - i, (unsigned int)(1 + 4999999 / sizeof(T)));
         v.resize(i + blk);
         is.read((char*)&v[i], blk * sizeof(T));
         i += blk;

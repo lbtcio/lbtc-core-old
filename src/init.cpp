@@ -239,7 +239,11 @@ void Shutdown()
         delete pblocktree;
         pblocktree = NULL;
 
+#ifdef OS_WIN
+        Sleep(5000);/*unit millisecond*/
+#else
         sleep(5);
+#endif
     }
 #ifdef ENABLE_WALLET
     if (pwalletMain)
@@ -511,8 +515,8 @@ std::string HelpMessage(HelpMessageMode mode)
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/bitcoin/bitcoin>";
-    const std::string URL_WEBSITE = "<https://bitcoincore.org>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/lbtcio/lbtc-core>";
+    const std::string URL_WEBSITE = "<https://lbtc.io>";
 
     return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" +
            "\n" +

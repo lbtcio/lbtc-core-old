@@ -16,6 +16,10 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
+#ifdef OS_WIN
+#include "db.h" /*ssize_t define in db-4.8.30.NC\build_windows\db.h*/
+#endif
+
 #include <atomic>
 
 #ifndef WIN32

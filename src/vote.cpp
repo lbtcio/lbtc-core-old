@@ -54,11 +54,11 @@ bool Vote::ReadControlFile(int64_t& nBlockHeight, std::string& strBlockHash, con
     bool ret = false;
     FILE *file = fopen(strFileName.c_str(), "r");
     if(file) {
-        fscanf(file, "%ld\n", &nBlockHeight);
+        fscanf(file, "%lld\n", &nBlockHeight);
 
         if(nBlockHeight < 0) {
             nVersion = nBlockHeight;
-            fscanf(file, "%ld\n", &nBlockHeight);
+            fscanf(file, "%lld\n", &nBlockHeight);
         }
 
         char buff[128];
@@ -77,8 +77,8 @@ bool Vote::WriteControlFile(int64_t nBlockHeight, const std::string& strBlockHas
     bool ret = false;
     FILE *file = fopen(strFileName.c_str(), "w");
     if(file) {
-        fprintf(file, "%ld\n", nCurrentVersion);
-        fprintf(file, "%ld\n", nBlockHeight);
+        fprintf(file, "%lld\n", nCurrentVersion);
+        fprintf(file, "%lld\n", nBlockHeight);
         fprintf(file, "%s\n", strBlockHash.c_str());
         fclose(file);
         ret = true;
@@ -147,9 +147,12 @@ bool Vote::RepairFile(int64_t nBlockHeight, const std::string& strBlockHash)
             {
                 return true;
             } else {
+                LogPrintf("%s: not find control file:%s, strBlockHashTemp:%s\n", __func__, strFileName.c_str(), strBlockHashTemp.c_str());
                 return false;    
             }
-        }
+        } else {
+            LogPrintf("%s: read control file:%s failed, strBlockHashTemp:%s\n", __func__, strFileName.c_str(), strBlockHashTemp.c_str());
+		}
     }
 
     return false;
@@ -684,10 +687,12 @@ bool Vote::Store(int64_t nBlockHeight, const std::string& strBlockHash)
     }
 
     if(Write(strBlockHash) == false) {
+        LogPrintf("%s: Write failed, nBlockHeight:%lld, strBlockHash:%s\n", __func__, nBlockHeight, strBlockHash.c_str());
         return false;
     }
 
     if(WriteControlFile(nBlockHeight, strBlockHash, strControlFileName + "-temp") == false) {
+        LogPrintf("%s: WriteControlFile failed, nBlockHeight:%lld, strBlockHash:%s\n", __func__, nBlockHeight, strBlockHash.c_str());
         Delete(strBlockHash);
         return false;
     }
@@ -707,9 +712,10 @@ bool Vote::Store(int64_t nBlockHeight, const std::string& strBlockHash)
 
 bool Vote::Load(int64_t height, const std::string& strBlockHash)
 {
-    if(RepairFile(height, strBlockHash) == false)
+    if (RepairFile(height, strBlockHash) == false) {
+        LogPrintf("%s: RepairFile failed, nBlockHeight:%lld, strBlockHash:%s\n", __func__, height, strBlockHash.c_str());
         return false;
-
+	}
     return Read();
 }
 
@@ -721,9 +727,10 @@ bool Vote::Read()
     uint64_t balance = 0;
 
     write_lock w(lockVote);
-
-    if(ReadControlFile(nOldBlockHeight, strOldBlockHash, strControlFileName) == false)
+    if (ReadControlFile(nOldBlockHeight, strOldBlockHash, strControlFileName) == false) {
+        LogPrintf("%s: ReadControlFile failed, nOldBlockHeight:%lld, strOldBlockHash:%s, strControlFileName:%s\n", __func__, nOldBlockHeight, strOldBlockHash.c_str(), strControlFileName.c_str());
         return false;
+    }
 
     file = fopen((strDelegateFileName + "-" + strOldBlockHash).c_str(), "rb");
     if(file) {
@@ -773,11 +780,12 @@ bool Vote::Read()
     if(file) {
     while(1)
     {
-        if(fread(&buff[0], 64, 1, file) <= 0) {
+        unsigned char strHash[64];
+        if(fread(&strHash[0], 64, 1, file) <= 0) {
             break;
         }
         uint256 hash;
-        hash.SetHex((const char*)&buff[0]);
+        hash.SetHex((const char*)&strHash[0]);
 
         uint64_t height;
         fread(&height, sizeof(height), 1, file);
@@ -891,6 +899,7 @@ uint64_t Vote::_UpdateAddressBalance(const CMyAddress& address, int64_t value)
     if(it != mapAddressBalance.end()) {
         balance = it->second + value;
         if(balance < 0) {
+            LogPrintf("%s: abort, balance=%ld\n", __func__, balance);
             abort();
         }
 
@@ -902,6 +911,7 @@ uint64_t Vote::_UpdateAddressBalance(const CMyAddress& address, int64_t value)
         return balance;
     } else {
         if(value < 0) {
+            LogPrintf("%s: abort, value=%ld\n", __func__, value);
             abort();
         }
 

@@ -53,7 +53,11 @@
 #include <boost/thread.hpp>
 
 #if defined(NDEBUG)
+#ifdef WIN32
+#include <assert.h>
+#else
 # error "Bitcoin cannot be compiled without assertions."
+#endif
 #endif
 
 using namespace std;
@@ -2756,7 +2760,8 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             bool fInvalidFound = false;
             std::shared_ptr<const CBlock> nullBlockPtr;
             if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connectTrace)) {
-                return false;    
+                LogPrintf("%s: ActivateBestChainStep failed\n", __func__);
+                return false;
             }
 
             if (fInvalidFound) {
@@ -3760,8 +3765,10 @@ CBlockIndex * InsertBlockIndex(uint256 hash)
 
 bool static LoadBlockIndexDB(const CChainParams& chainparams)
 {
-    if (!pblocktree->LoadBlockIndexGuts(InsertBlockIndex))
+    if (!pblocktree->LoadBlockIndexGuts(InsertBlockIndex)) {
+        LogPrintf("%s LoadBlockIndexGuts failed\n", __func__);
         return false;
+    }
 
     boost::this_thread::interruption_point();
 
@@ -3834,6 +3841,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
     {
         CDiskBlockPos pos(*it, 0);
         if (CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION).IsNull()) {
+            LogPrintf("%s OpenBlockFile failed\n", __func__);
             return false;
         }
     }

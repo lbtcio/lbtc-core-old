@@ -31,7 +31,7 @@
 
 #else
 // Non-Mac OS X / non-Darwin
-
+#if !defined(bswap_16)
 #if HAVE_DECL_BSWAP_16 == 0
 inline uint16_t bswap_16(uint16_t x)
 {
@@ -60,7 +60,7 @@ inline uint64_t bswap_64(uint64_t x)
           | ((x & 0x00000000000000ffull) << 56));
 }
 #endif // HAVE_DECL_BSWAP64
-
+#endif // !defined(bswap_16)
 #endif // defined(__APPLE__)
 
 #endif // BITCOIN_COMPAT_BYTESWAP_H

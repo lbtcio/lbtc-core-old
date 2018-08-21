@@ -13,6 +13,9 @@
 #include "util/logging.h"
 #include "util/mutexlock.h"
 #include "util/random.h"
+#ifdef OS_WIN
+#include "db.h" /*ssize_t define in db - 4.8.30.NC\build_windows\db.h*/
+#endif
 
 namespace leveldb {
 

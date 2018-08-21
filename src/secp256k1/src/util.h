@@ -104,7 +104,9 @@ static SECP256K1_INLINE void *checked_malloc(const secp256k1_callback* cb, size_
 # else
 #  define SECP256K1_GNUC_EXT
 # endif
+#ifndef OS_WIN
 SECP256K1_GNUC_EXT typedef unsigned __int128 uint128_t;
+#endif
 #endif
 
 #endif
