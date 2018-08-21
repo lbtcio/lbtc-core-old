@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\src\bitcoin-cli-res.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\addrdb.cpp" />
+    <ClCompile Include="..\src\addrman.cpp" />
+    <ClCompile Include="..\src\amount.cpp" />
+    <ClCompile Include="..\src\arith_uint256.cpp" />
+    <ClCompile Include="..\src\base58.cpp" />
+    <ClCompile Include="..\src\bitcoin-cli.cpp" />
+    <ClCompile Include="..\src\bitcoin-tx.cpp" />
+    <ClCompile Include="..\src\blockencodings.cpp" />
+    <ClCompile Include="..\src\bloom.cpp" />
+    <ClCompile Include="..\src\chain.cpp" />
+    <ClCompile Include="..\src\chainparams.cpp" />
+    <ClCompile Include="..\src\chainparamsbase.cpp" />
+    <ClCompile Include="..\src\checkpoints.cpp" />
+    <ClCompile Include="..\src\clientversion.cpp" />
+    <ClCompile Include="..\src\coins.cpp" />
+    <ClCompile Include="..\src\compat\glibcxx_sanity.cpp" />
+    <ClCompile Include="..\src\compat\glibc_sanity.cpp" />
+    <ClCompile Include="..\src\compat\strnlen.cpp" />
+    <ClCompile Include="..\src\compressor.cpp" />
+    <ClCompile Include="..\src\consensus\merkle.cpp" />
+    <ClCompile Include="..\src\core_read.cpp" />
+    <ClCompile Include="..\src\core_write.cpp" />
+    <ClCompile Include="..\src\crypto\aes.cpp" />
+    <ClCompile Include="..\src\crypto\hmac_sha256.cpp" />
+    <ClCompile Include="..\src\crypto\hmac_sha512.cpp" />
+    <ClCompile Include="..\src\crypto\ripemd160.cpp" />
+    <ClCompile Include="..\src\crypto\sha1.cpp" />
+    <ClCompile Include="..\src\crypto\sha256.cpp" />
+    <ClCompile Include="..\src\crypto\sha512.cpp" />
+    <ClCompile Include="..\src\dbwrapper.cpp" />
+    <ClCompile Include="..\src\hash.cpp" />
+    <ClCompile Include="..\src\httprpc.cpp" />
+    <ClCompile Include="..\src\httpserver.cpp" />
+    <ClCompile Include="..\src\init.cpp" />
+    <ClCompile Include="..\src\key.cpp" />
+    <ClCompile Include="..\src\keystore.cpp" />
+    <ClCompile Include="..\src\leveldb\db\builder.cc" />
+    <ClCompile Include="..\src\leveldb\db\dbformat.cc" />
+    <ClCompile Include="..\src\leveldb\db\db_impl.cc" />
+    <ClCompile Include="..\src\leveldb\db\db_iter.cc" />
+    <ClCompile Include="..\src\leveldb\db\dumpfile.cc" />
+    <ClCompile Include="..\src\leveldb\db\filename.cc" />
+    <ClCompile Include="..\src\leveldb\db\log_reader.cc" />
+    <ClCompile Include="..\src\leveldb\db\log_writer.cc" />
+    <ClCompile Include="..\src\leveldb\db\memtable.cc" />
+    <ClCompile Include="..\src\leveldb\db\repair.cc" />
+    <ClCompile Include="..\src\leveldb\db\table_cache.cc" />
+    <ClCompile Include="..\src\leveldb\db\version_edit.cc" />
+    <ClCompile Include="..\src\leveldb\db\version_set.cc" />
+    <ClCompile Include="..\src\leveldb\db\write_batch.cc" />
+    <ClCompile Include="..\src\leveldb\helpers\memenv\memenv.cc" />
+    <ClCompile Include="..\src\leveldb\port\port_win.cc" />
+    <ClCompile Include="..\src\leveldb\table\block.cc">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\block_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)\block_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\block_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)\block_msvc</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\leveldb\table\block_builder.cc" />
+    <ClCompile Include="..\src\leveldb\table\filter_block.cc" />
+    <ClCompile Include="..\src\leveldb\table\format.cc" />
+    <ClCompile Include="..\src\leveldb\table\iterator.cc" />
+    <ClCompile Include="..\src\leveldb\table\merger.cc" />
+    <ClCompile Include="..\src\leveldb\table\table.cc" />
+    <ClCompile Include="..\src\leveldb\table\table_builder.cc" />
+    <ClCompile Include="..\src\leveldb\table\two_level_iterator.cc" />
+    <ClCompile Include="..\src\leveldb\util\arena.cc" />
+    <ClCompile Include="..\src\leveldb\util\bloom.cc">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\bloom_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)\bloom_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\bloom_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)\bloom_msvc</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\leveldb\util\cache.cc" />
+    <ClCompile Include="..\src\leveldb\util\coding.cc" />
+    <ClCompile Include="..\src\leveldb\util\comparator.cc" />
+    <ClCompile Include="..\src\leveldb\util\crc32c.cc" />
+    <ClCompile Include="..\src\leveldb\util\env.cc" />
+    <ClCompile Include="..\src\leveldb\util\env_win.cc" />
+    <ClCompile Include="..\src\leveldb\util\filter_policy.cc" />
+    <ClCompile Include="..\src\leveldb\util\hash.cc">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\hash_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)\hash_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\hash_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)\hash_msvc</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\leveldb\util\histogram.cc" />
+    <ClCompile Include="..\src\leveldb\util\logging.cc" />
+    <ClCompile Include="..\src\leveldb\util\options.cc" />
+    <ClCompile Include="..\src\leveldb\util\status.cc" />
+    <ClCompile Include="..\src\leveldb\util\testharness.cc" />
+    <ClCompile Include="..\src\leveldb\util\testutil.cc" />
+    <ClCompile Include="..\src\merkleblock.cpp" />
+    <ClCompile Include="..\src\miner.cpp" />
+    <ClCompile Include="..\src\net.cpp" />
+    <ClCompile Include="..\src\netaddress.cpp" />
+    <ClCompile Include="..\src\netbase.cpp" />
+    <ClCompile Include="..\src\net_processing.cpp" />
+    <ClCompile Include="..\src\noui.cpp" />
+    <ClCompile Include="..\src\policy\fees.cpp" />
+    <ClCompile Include="..\src\policy\policy.cpp" />
+    <ClCompile Include="..\src\policy\rbf.cpp" />
+    <ClCompile Include="..\src\pow.cpp" />
+    <ClCompile Include="..\src\primitives\block.cpp" />
+    <ClCompile Include="..\src\primitives\transaction.cpp" />
+    <ClCompile Include="..\src\protocol.cpp" />
+    <ClCompile Include="..\src\pubkey.cpp" />
+    <ClCompile Include="..\src\random.cpp" />
+    <ClCompile Include="..\src\rest.cpp" />
+    <ClCompile Include="..\src\rpc\blockchain.cpp" />
+    <ClCompile Include="..\src\rpc\client.cpp" />
+    <ClCompile Include="..\src\rpc\mining.cpp" />
+    <ClCompile Include="..\src\rpc\misc.cpp" />
+    <ClCompile Include="..\src\rpc\net.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\net_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)\net_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\net_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)\net_msvc</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\rpc\protocol.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\protocol_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)\protocol_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\protocol_msvc</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)\protocol_msvc</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\src\rpc\rawtransaction.cpp" />
+    <ClCompile Include="..\src\rpc\server.cpp" />
+    <ClCompile Include="..\src\scheduler.cpp" />
+    <ClCompile Include="..\src\script\bitcoinconsensus.cpp" />
+    <ClCompile Include="..\src\script\interpreter.cpp" />
+    <ClCompile Include="..\src\script\ismine.cpp" />
+    <ClCompile Include="..\src\script\script.cpp" />
+    <ClCompile Include="..\src\script\script_error.cpp" />
+    <ClCompile Include="..\src\script\sigcache.cpp" />
+    <ClCompile Include="..\src\script\sign.cpp" />
+    <ClCompile Include="..\src\script\standard.cpp" />
+    <ClCompile Include="..\src\secp256k1\contrib\lax_der_parsing.c" />
+    <ClCompile Include="..\src\secp256k1\contrib\lax_der_privatekey_parsing.c" />
+    <ClCompile Include="..\src\secp256k1\src\secp256k1.c" />
+    <ClCompile Include="..\src\support\cleanse.cpp" />
+    <ClCompile Include="..\src\support\lockedpool.cpp" />
+    <ClCompile Include="..\src\sync.cpp" />
+    <ClCompile Include="..\src\threadinterrupt.cpp" />
+    <ClCompile Include="..\src\timedata.cpp" />
+    <ClCompile Include="..\src\torcontrol.cpp" />
+    <ClCompile Include="..\src\txdb.cpp" />
+    <ClCompile Include="..\src\txmempool.cpp" />
+    <ClCompile Include="..\src\uint256.cpp" />
+    <ClCompile Include="..\src\ui_interface.cpp" />
+    <ClCompile Include="..\src\univalue\lib\univalue.cpp" />
+    <ClCompile Include="..\src\univalue\lib\univalue_read.cpp" />
+    <ClCompile Include="..\src\univalue\lib\univalue_write.cpp" />
+    <ClCompile Include="..\src\util.cpp" />
+    <ClCompile Include="..\src\utilmoneystr.cpp" />
+    <ClCompile Include="..\src\utilstrencodings.cpp" />
+    <ClCompile Include="..\src\utiltime.cpp" />
+    <ClCompile Include="..\src\validation.cpp" />
+    <ClCompile Include="..\src\validationinterface.cpp" />
+    <ClCompile Include="..\src\versionbits.cpp" />
+    <ClCompile Include="..\src\vote.cpp" />
+    <ClCompile Include="..\src\wallet\crypter.cpp" />
+    <ClCompile Include="..\src\wallet\db.cpp" />
+    <ClCompile Include="..\src\wallet\rpcdump.cpp" />
+    <ClCompile Include="..\src\wallet\rpcwallet.cpp" />
+    <ClCompile Include="..\src\wallet\wallet.cpp" />
+    <ClCompile Include="..\src\wallet\walletdb.cpp" />
+    <ClCompile Include="..\src\warnings.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\addrdb.h" />
+    <ClInclude Include="..\src\address.h" />
+    <ClInclude Include="..\src\address_index.h" />
+    <ClInclude Include="..\src\addrman.h" />
+    <ClInclude Include="..\src\amount.h" />
+    <ClInclude Include="..\src\arith_uint256.h" />
+    <ClInclude Include="..\src\base58.h" />
+    <ClInclude Include="..\src\blockhash.h" />
+    <ClInclude Include="..\src\bloom.h" />
+    <ClInclude Include="..\src\chain.h" />
+    <ClInclude Include="..\src\chainparams.h" />
+    <ClInclude Include="..\src\chainparamsbase.h" />
+    <ClInclude Include="..\src\chainparamsseeds.h" />
+    <ClInclude Include="..\src\checkpoints.h" />
+    <ClInclude Include="..\src\checkqueue.h" />
+    <ClInclude Include="..\src\clientversion.h" />
+    <ClInclude Include="..\src\coins.h" />
+    <ClInclude Include="..\src\commdt.h" />
+    <ClInclude Include="..\src\compat.h" />
+    <ClInclude Include="..\src\compat\byteswap.h" />
+    <ClInclude Include="..\src\compat\endian.h" />
+    <ClInclude Include="..\src\compat\sanity.h" />
+    <ClInclude Include="..\src\compressor.h" />
+    <ClInclude Include="..\src\consensus\consensus.h" />
+    <ClInclude Include="..\src\consensus\merkle.h" />
+    <ClInclude Include="..\src\consensus\params.h" />
+    <ClInclude Include="..\src\consensus\validation.h" />
+    <ClInclude Include="..\src\core_io.h" />
+    <ClInclude Include="..\src\core_memusage.h" />
+    <ClInclude Include="..\src\crypto\aes.h" />
+    <ClInclude Include="..\src\crypto\common.h" />
+    <ClInclude Include="..\src\crypto\hmac_sha256.h" />
+    <ClInclude Include="..\src\crypto\hmac_sha512.h" />
+    <ClInclude Include="..\src\crypto\ripemd160.h" />
+    <ClInclude Include="..\src\crypto\sha1.h" />
+    <ClInclude Include="..\src\crypto\sha256.h" />
+    <ClInclude Include="..\src\crypto\sha512.h" />
+    <ClInclude Include="..\src\cuckoocache.h" />
+    <ClInclude Include="..\src\dbwrapper.h" />
+    <ClInclude Include="..\src\hash.h" />
+    <ClInclude Include="..\src\httprpc.h" />
+    <ClInclude Include="..\src\httpserver.h" />
+    <ClInclude Include="..\src\indirectmap.h" />
+    <ClInclude Include="..\src\init.h" />
+    <ClInclude Include="..\src\key.h" />
+    <ClInclude Include="..\src\keystore.h" />
+    <ClInclude Include="..\src\leveldb\db\builder.h" />
+    <ClInclude Include="..\src\leveldb\db\dbformat.h" />
+    <ClInclude Include="..\src\leveldb\db\db_impl.h" />
+    <ClInclude Include="..\src\leveldb\db\db_iter.h" />
+    <ClInclude Include="..\src\leveldb\db\filename.h" />
+    <ClInclude Include="..\src\leveldb\db\log_format.h" />
+    <ClInclude Include="..\src\leveldb\db\log_reader.h" />
+    <ClInclude Include="..\src\leveldb\db\log_writer.h" />
+    <ClInclude Include="..\src\leveldb\db\memtable.h" />
+    <ClInclude Include="..\src\leveldb\db\skiplist.h" />
+    <ClInclude Include="..\src\leveldb\db\snapshot.h" />
+    <ClInclude Include="..\src\leveldb\db\table_cache.h" />
+    <ClInclude Include="..\src\leveldb\db\version_edit.h" />
+    <ClInclude Include="..\src\leveldb\db\version_set.h" />
+    <ClInclude Include="..\src\leveldb\db\write_batch_internal.h" />
+    <ClInclude Include="..\src\leveldb\helpers\memenv\memenv.h" />
+    <ClInclude Include="..\src\leveldb\include\leveldb\c.h" />
+    <ClInclude Include="..\src\leveldb\include\leveldb\cache.h" />
+    <ClInclude Include="..\src\leveldb\include\leveldb\comparator.h" />
+    <ClInclude Include="..\src\leveldb\include\leveldb\db.h" />
+    <ClInclude Include="..\src\leveldb\include\leveldb\dumpfile.h" />
+    <ClInclude Include="..\src\leveldb\include\leveldb\env.h" />
+    <ClInclude Include="..\src\leveldb\include\leveldb\filter_policy.h" />
+    <ClInclude Include="..\src\leveldb\include\leveldb\iterator.h" />
+    <ClInclude Include="..\src\leveldb\include\leveldb\options.h" />
+    <ClInclude Include="..\src\leveldb\include\leveldb\slice.h" />
+    <ClInclude Include="..\src\leveldb\include\leveldb\status.h" />
+    <ClInclude Include="..\src\leveldb\include\leveldb\table.h" />
+    <ClInclude Include="..\src\leveldb\include\leveldb\table_builder.h" />
+    <ClInclude Include="..\src\leveldb\include\leveldb\write_batch.h" />
+    <ClInclude Include="..\src\leveldb\port\atomic_pointer.h" />
+    <ClInclude Include="..\src\leveldb\port\port.h" />
+    <ClInclude Include="..\src\leveldb\port\port_example.h" />
+    <ClInclude Include="..\src\leveldb\port\port_win.h" />
+    <ClInclude Include="..\src\leveldb\port\thread_annotations.h" />
+    <ClInclude Include="..\src\leveldb\port\win\stdint.h" />
+    <ClInclude Include="..\src\leveldb\table\block.h" />
+    <ClInclude Include="..\src\leveldb\table\block_builder.h" />
+    <ClInclude Include="..\src\leveldb\table\filter_block.h" />
+    <ClInclude Include="..\src\leveldb\table\format.h" />
+    <ClInclude Include="..\src\leveldb\table\iterator_wrapper.h" />
+    <ClInclude Include="..\src\leveldb\table\merger.h" />
+    <ClInclude Include="..\src\leveldb\table\two_level_iterator.h" />
+    <ClInclude Include="..\src\leveldb\util\arena.h" />
+    <ClInclude Include="..\src\leveldb\util\coding.h" />
+    <ClInclude Include="..\src\leveldb\util\crc32c.h" />
+    <ClInclude Include="..\src\leveldb\util\hash.h" />
+    <ClInclude Include="..\src\leveldb\util\histogram.h" />
+    <ClInclude Include="..\src\leveldb\util\logging.h" />
+    <ClInclude Include="..\src\leveldb\util\mutexlock.h" />
+    <ClInclude Include="..\src\leveldb\util\posix_logger.h" />
+    <ClInclude Include="..\src\leveldb\util\random.h" />
+    <ClInclude Include="..\src\leveldb\util\testharness.h" />
+    <ClInclude Include="..\src\leveldb\util\testutil.h" />
+    <ClInclude Include="..\src\limitedmap.h" />
+    <ClInclude Include="..\src\memusage.h" />
+    <ClInclude Include="..\src\merkleblock.h" />
+    <ClInclude Include="..\src\miner.h" />
+    <ClInclude Include="..\src\myaddress.h" />
+    <ClInclude Include="..\src\net.h" />
+    <ClInclude Include="..\src\netaddress.h" />
+    <ClInclude Include="..\src\netbase.h" />
+    <ClInclude Include="..\src\netmessagemaker.h" />
+    <ClInclude Include="..\src\net_processing.h" />
+    <ClInclude Include="..\src\noui.h" />
+    <ClInclude Include="..\src\policy\fees.h" />
+    <ClInclude Include="..\src\policy\policy.h" />
+    <ClInclude Include="..\src\policy\rbf.h" />
+    <ClInclude Include="..\src\pow.h" />
+    <ClInclude Include="..\src\prevector.h" />
+    <ClInclude Include="..\src\primitives\block.h" />
+    <ClInclude Include="..\src\primitives\transaction.h" />
+    <ClInclude Include="..\src\protocol.h" />
+    <ClInclude Include="..\src\pubkey.h" />
+    <ClInclude Include="..\src\random.h" />
+    <ClInclude Include="..\src\rpcwallet.h" />
+    <ClInclude Include="..\src\rpc\client.h" />
+    <ClInclude Include="..\src\rpc\protocol.h" />
+    <ClInclude Include="..\src\rpc\rawtransaction.h" />
+    <ClInclude Include="..\src\rpc\register.h" />
+    <ClInclude Include="..\src\rpc\server.h" />
+    <ClInclude Include="..\src\scheduler.h" />
+    <ClInclude Include="..\src\script\bitcoinconsensus.h" />
+    <ClInclude Include="..\src\script\interpreter.h" />
+    <ClInclude Include="..\src\script\ismine.h" />
+    <ClInclude Include="..\src\script\script.h" />
+    <ClInclude Include="..\src\script\script_error.h" />
+    <ClInclude Include="..\src\script\sigcache.h" />
+    <ClInclude Include="..\src\script\sign.h" />
+    <ClInclude Include="..\src\script\standard.h" />
+    <ClInclude Include="..\src\secp256k1\contrib\lax_der_parsing.h" />
+    <ClInclude Include="..\src\secp256k1\contrib\lax_der_privatekey_parsing.h" />
+    <ClInclude Include="..\src\secp256k1\include\secp256k1.h" />
+    <ClInclude Include="..\src\secp256k1\include\secp256k1_ecdh.h" />
+    <ClInclude Include="..\src\secp256k1\include\secp256k1_recovery.h" />
+    <ClInclude Include="..\src\secp256k1\include\secp256k1_schnorr.h" />
+    <ClInclude Include="..\src\secp256k1\src\basic-config.h" />
+    <ClInclude Include="..\src\secp256k1\src\ecdsa.h" />
+    <ClInclude Include="..\src\secp256k1\src\ecdsa_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\eckey.h" />
+    <ClInclude Include="..\src\secp256k1\src\eckey_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\ecmult.h" />
+    <ClInclude Include="..\src\secp256k1\src\ecmult_const.h" />
+    <ClInclude Include="..\src\secp256k1\src\ecmult_const_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\ecmult_gen.h" />
+    <ClInclude Include="..\src\secp256k1\src\ecmult_gen_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\ecmult_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\ecmult_static_context.h" />
+    <ClInclude Include="..\src\secp256k1\src\field.h" />
+    <ClInclude Include="..\src\secp256k1\src\field_10x26.h" />
+    <ClInclude Include="..\src\secp256k1\src\field_10x26_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\field_5x52.h" />
+    <ClInclude Include="..\src\secp256k1\src\field_5x52_asm_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\field_5x52_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\field_5x52_int128_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\field_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\group.h" />
+    <ClInclude Include="..\src\secp256k1\src\group_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\hash.h" />
+    <ClInclude Include="..\src\secp256k1\src\hash_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\modules\ecdh\main_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\modules\ecdh\tests_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\modules\recovery\main_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\modules\recovery\tests_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\num.h" />
+    <ClInclude Include="..\src\secp256k1\src\num_gmp.h" />
+    <ClInclude Include="..\src\secp256k1\src\num_gmp_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\num_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\scalar.h" />
+    <ClInclude Include="..\src\secp256k1\src\scalar_4x64.h" />
+    <ClInclude Include="..\src\secp256k1\src\scalar_4x64_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\scalar_8x32.h" />
+    <ClInclude Include="..\src\secp256k1\src\scalar_8x32_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\scalar_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\scalar_low.h" />
+    <ClInclude Include="..\src\secp256k1\src\scalar_low_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\testrand.h" />
+    <ClInclude Include="..\src\secp256k1\src\testrand_impl.h" />
+    <ClInclude Include="..\src\secp256k1\src\util.h" />
+    <ClInclude Include="..\src\serialize.h" />
+    <ClInclude Include="..\src\streams.h" />
+    <ClInclude Include="..\src\support\allocators\secure.h" />
+    <ClInclude Include="..\src\support\allocators\zeroafterfree.h" />
+    <ClInclude Include="..\src\support\cleanse.h" />
+    <ClInclude Include="..\src\support\events.h" />
+    <ClInclude Include="..\src\support\lockedpool.h" />
+    <ClInclude Include="..\src\sync.h" />
+    <ClInclude Include="..\src\threadinterrupt.h" />
+    <ClInclude Include="..\src\threadsafety.h" />
+    <ClInclude Include="..\src\timedata.h" />
+    <ClInclude Include="..\src\tinyformat.h" />
+    <ClInclude Include="..\src\torcontrol.h" />
+    <ClInclude Include="..\src\txdb.h" />
+    <ClInclude Include="..\src\txmempool.h" />
+    <ClInclude Include="..\src\uint256.h" />
+    <ClInclude Include="..\src\ui_interface.h" />
+    <ClInclude Include="..\src\undo.h" />
+    <ClInclude Include="..\src\univalue\include\univalue.h" />
+    <ClInclude Include="..\src\univalue\lib\univalue_escapes.h" />
+    <ClInclude Include="..\src\univalue\lib\univalue_utffilter.h" />
+    <ClInclude Include="..\src\util.h" />
+    <ClInclude Include="..\src\utilmoneystr.h" />
+    <ClInclude Include="..\src\utilstrencodings.h" />
+    <ClInclude Include="..\src\utiltime.h" />
+    <ClInclude Include="..\src\validation.h" />
+    <ClInclude Include="..\src\validationinterface.h" />
+    <ClInclude Include="..\src\version.h" />
+    <ClInclude Include="..\src\versionbits.h" />
+    <ClInclude Include="..\src\vote.h" />
+    <ClInclude Include="..\src\wallet\coincontrol.h" />
+    <ClInclude Include="..\src\wallet\crypter.h" />
+    <ClInclude Include="..\src\wallet\db.h" />
+    <ClInclude Include="..\src\wallet\rpcwallet.h" />
+    <ClInclude Include="..\src\wallet\wallet.h" />
+    <ClInclude Include="..\src\wallet\walletdb.h" />
+    <ClInclude Include="..\src\warnings.h" />
+    <ClInclude Include="..\src\_blockhash.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\secp256k1\src\asm\field_10x26_arm.s" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{D4E605DB-8C50-4FFF-9B32-70C27E307396}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>bitcoincli</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)_x86\</OutDir>
+    <IntDir>$(Configuration)Obj\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)_x86\</OutDir>
+    <IntDir>$(Configuration)Obj\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IntDir>$(Configuration)Obj\</IntDir>
+    <OutDir>$(SolutionDir)$(Configuration)_x64\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)_x64\</OutDir>
+    <IntDir>$(Configuration)Obj\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_WIN32_WINDOWS;OS_WIN;HAVE_CXX11=1;HAVE_BOOST=1;HAVE_BOOST_CHRONO=1;HAVE_BOOST_FILESYSTEM=1;HAVE_BOOST_PROGRAM_OPTIONS=1;HAVE_BOOST_SYSTEM=1;HAVE_BOOST_THREAD=1;HAVE_WORKING_BOOST_SLEEP=1;HAVE_STDLIB_H=1;HAVE_STDINT_H=1;HAVE_LIBCRYPTO=1;HAVE_BYTESWAP_H=1;HAVE_CONSENSUS_LIB=1;HAVE_DECL_EVP_MD_CTX_NEW=0;HAVE_DECL_STRERROR_R=1;HAVE_DECL_STRNLEN=1;HAVE_FUNC_ATTRIBUTE_VISIBILITY=1;HAVE_INTTYPES_H=1;HAVE_MALLOPT_ARENA_MAX=1;HAVE_MEMORY_H=1;HAVE_PTHREAD_PRIO_INHERIT=1;HAVE_STDIO_H=1;HAVE_STRERROR_R=1;HAVE_STRINGS_H=1;HAVE_STRING_H=1;HAVE_VISIBILITY_ATTRIBUTE=1;HAVE_WORKING_BOOST_SLEEP_FOR=1;HAVE___INT128=1;STDC_HEADERS=1;STRERROR_R_CHAR_P=1;ENABLE_WALLET=1;ENABLE_ZMQ=1;ENABLE_MODULE_RECOVERY=1;DISABLE_TESTS=1;USE_NUM_NONE=1;USE_FIELD_10X26=1;USE_FIELD_INV_BUILTIN=1;USE_SCALAR_8X32=1;USE_SCALAR_INV_BUILTIN=1;USE_ECMULT_STATIC_PRECOMPUTATION=1;_SCL_SECURE_NO_WARNINGS=1;_CRT_SECURE_NO_WARNINGS=1;LEVELDB_PLATFORM_WINDOWS=1;LT_OBJDIR=".libs/";PACKAGE_NAME="LBTC";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\APP\boost_1_67_0;C:\APP\openssl-1.1.0h\include;C:\APP\libevent-2.1.8-stable\include;C:\APP\zeromq-4.2.3\include;C:\APP\db-4.8.30.NC\build_windows;C:\MinGW\include;$(SolutionDir)\src;$(SolutionDir)\src\univalue\include;$(SolutionDir)\src\leveldb;$(SolutionDir)\src\leveldb\include;$(SolutionDir)\src\leveldb\helpers\memenv;$(SolutionDir)\src\secp256k1;$(SolutionDir)\src\secp256k1\include;$(SolutionDir)\src\secp256k1\src;$(SolutionDir)\src\compat</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4101;4244;4267;4273;4477;</DisableSpecificWarnings>
+      <UndefinePreprocessorDefinitions>HAVE_MSG_NOSIGNAL;MSG_NOSIGNAL;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\APP\boost_1_67_0\stage\lib;C:\APP\openssl-1.1.0h\apps\x86;C:\APP\libevent-2.1.8-stable\lib\x86;C:\APP\zeromq-4.2.3\bin\Win32\Release\v141\dynamic;C:\APP\db-4.8.30.NC\build_windows\Win32\Release;C:\MinGW\lib</AdditionalLibraryDirectories>
+      <DelayLoadDLLs>
+      </DelayLoadDLLs>
+      <IgnoreSpecificDefaultLibraries>libc.lib;libcmt.lib;libcd.lib;libcmtd.lib;msvcrtd.lib;</IgnoreSpecificDefaultLibraries>
+      <AdditionalDependencies>msvcrt.lib;Shlwapi.lib;ws2_32.lib;wsock32.lib;libssl.lib;libcrypto.lib;libevent.lib;libevent_core.lib;libevent_extras.lib;libzmq.lib;libdb48.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32_WINDOWS;OS_WIN;HAVE_CXX11=1;HAVE_BOOST=1;HAVE_BOOST_CHRONO=1;HAVE_BOOST_FILESYSTEM=1;HAVE_BOOST_PROGRAM_OPTIONS=1;HAVE_BOOST_SYSTEM=1;HAVE_BOOST_THREAD=1;HAVE_WORKING_BOOST_SLEEP=1;HAVE_STDLIB_H=1;HAVE_STDINT_H=1;HAVE_LIBCRYPTO=1;HAVE_BYTESWAP_H=1;HAVE_CONSENSUS_LIB=1;HAVE_DECL_EVP_MD_CTX_NEW=0;HAVE_DECL_STRERROR_R=1;HAVE_DECL_STRNLEN=1;HAVE_FUNC_ATTRIBUTE_VISIBILITY=1;HAVE_INTTYPES_H=1;HAVE_MALLOPT_ARENA_MAX=1;HAVE_MEMORY_H=1;HAVE_PTHREAD_PRIO_INHERIT=1;HAVE_STDIO_H=1;HAVE_STRERROR_R=1;HAVE_STRINGS_H=1;HAVE_STRING_H=1;HAVE_VISIBILITY_ATTRIBUTE=1;HAVE_WORKING_BOOST_SLEEP_FOR=1;HAVE___INT128=1;STDC_HEADERS=1;STRERROR_R_CHAR_P=1;ENABLE_WALLET=1;ENABLE_ZMQ=1;ENABLE_MODULE_RECOVERY=1;DISABLE_TESTS=1;USE_NUM_NONE=1;USE_FIELD_10X26=1;USE_FIELD_INV_BUILTIN=1;USE_SCALAR_8X32=1;USE_SCALAR_INV_BUILTIN=1;USE_ECMULT_STATIC_PRECOMPUTATION=1;_SCL_SECURE_NO_WARNINGS=1;_CRT_SECURE_NO_WARNINGS=1;LEVELDB_PLATFORM_WINDOWS=1;LT_OBJDIR=".libs/";PACKAGE_NAME="LBTC";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\APP\boost_1_67_0;C:\APP\openssl-1.1.0h\include;C:\APP\libevent-2.1.8-stable\include;C:\APP\zeromq-4.2.3\include;C:\APP\db-4.8.30.NC\build_windows;C:\MinGW\include;$(SolutionDir)\src;$(SolutionDir)\src\univalue\include;$(SolutionDir)\src\leveldb;$(SolutionDir)\src\leveldb\include;$(SolutionDir)\src\leveldb\helpers\memenv;$(SolutionDir)\src\secp256k1;$(SolutionDir)\src\secp256k1\include;$(SolutionDir)\src\secp256k1\src;$(SolutionDir)\src\compat</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4101;4244;4267;4273;4477;</DisableSpecificWarnings>
+      <UndefinePreprocessorDefinitions>HAVE_MSG_NOSIGNAL;MSG_NOSIGNAL;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\APP\boost_1_67_0\stage\lib;C:\APP\libevent-2.1.8-stable\lib\x86;C:\APP\openssl-1.1.0h\apps\x86;C:\APP\zeromq-4.2.3\bin\Win32\Debug\v141\dynamic;C:\MinGW\lib;C:\APP\db-4.8.30.NC\build_windows\Win32\Debug</AdditionalLibraryDirectories>
+      <DelayLoadDLLs>
+      </DelayLoadDLLs>
+      <IgnoreSpecificDefaultLibraries>libc.lib;libcmt.lib;msvcrt.lib;libcd.lib;libcmtd.lib;</IgnoreSpecificDefaultLibraries>
+      <AdditionalDependencies>msvcrtd.lib;Shlwapi.lib;ws2_32.lib;wsock32.lib;libssl.lib;libcrypto.lib;libevent.lib;libevent_core.lib;libevent_extras.lib;libzmq.lib;libdb48d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32_WINDOWS;OS_WIN;HAVE_CXX11=1;HAVE_BOOST=1;HAVE_BOOST_CHRONO=1;HAVE_BOOST_FILESYSTEM=1;HAVE_BOOST_PROGRAM_OPTIONS=1;HAVE_BOOST_SYSTEM=1;HAVE_BOOST_THREAD=1;HAVE_WORKING_BOOST_SLEEP=1;HAVE_STDLIB_H=1;HAVE_STDINT_H=1;HAVE_LIBCRYPTO=1;HAVE_BYTESWAP_H=1;HAVE_CONSENSUS_LIB=1;HAVE_DECL_EVP_MD_CTX_NEW=0;HAVE_DECL_STRERROR_R=1;HAVE_DECL_STRNLEN=1;HAVE_FUNC_ATTRIBUTE_VISIBILITY=1;HAVE_INTTYPES_H=1;HAVE_MALLOPT_ARENA_MAX=1;HAVE_MEMORY_H=1;HAVE_PTHREAD_PRIO_INHERIT=1;HAVE_STDIO_H=1;HAVE_STRERROR_R=1;HAVE_STRINGS_H=1;HAVE_STRING_H=1;HAVE_VISIBILITY_ATTRIBUTE=1;HAVE_WORKING_BOOST_SLEEP_FOR=1;HAVE___INT128=1;STDC_HEADERS=1;STRERROR_R_CHAR_P=1;ENABLE_WALLET=1;ENABLE_ZMQ=1;ENABLE_MODULE_RECOVERY=1;DISABLE_TESTS=1;USE_NUM_NONE=1;USE_FIELD_10X26=1;USE_FIELD_INV_BUILTIN=1;USE_SCALAR_8X32=1;USE_SCALAR_INV_BUILTIN=1;USE_ECMULT_STATIC_PRECOMPUTATION=1;_SCL_SECURE_NO_WARNINGS=1;_CRT_SECURE_NO_WARNINGS=1;LEVELDB_PLATFORM_WINDOWS=1;LT_OBJDIR=".libs/";PACKAGE_NAME="LBTC";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <UndefinePreprocessorDefinitions>HAVE_MSG_NOSIGNAL;MSG_NOSIGNAL;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\APP\boost_1_67_0;C:\APP\openssl-1.1.0h\include;C:\APP\libevent-2.1.8-stable\include;C:\APP\zeromq-4.2.3\include;C:\APP\db-4.8.30.NC\build_windows;C:\MinGW\include;$(SolutionDir)\src;$(SolutionDir)\src\univalue\include;$(SolutionDir)\src\leveldb;$(SolutionDir)\src\leveldb\include;$(SolutionDir)\src\leveldb\helpers\memenv;$(SolutionDir)\src\secp256k1;$(SolutionDir)\src\secp256k1\include;$(SolutionDir)\src\secp256k1\src;$(SolutionDir)\src\compat</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\APP\boost_1_67_0\stage\lib;C:\APP\openssl-1.1.0h\apps\x64;C:\APP\libevent-2.1.8-stable\lib\x64;C:\APP\zeromq-4.2.3\bin\x64\Debug\v141\dynamic;C:\APP\db-4.8.30.NC\build_windows\x64\Debug;C:\MinGW\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>msvcrtd.lib;Shlwapi.lib;ws2_32.lib;wsock32.lib;libssl.lib;libcrypto.lib;libevent.lib;libevent_core.lib;libevent_extras.lib;libzmq.lib;libdb48d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>libc.lib;libcmt.lib;msvcrt.lib;libcd.lib;libcmtd.lib;</IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_WIN32_WINDOWS;OS_WIN;HAVE_CXX11=1;HAVE_BOOST=1;HAVE_BOOST_CHRONO=1;HAVE_BOOST_FILESYSTEM=1;HAVE_BOOST_PROGRAM_OPTIONS=1;HAVE_BOOST_SYSTEM=1;HAVE_BOOST_THREAD=1;HAVE_WORKING_BOOST_SLEEP=1;HAVE_STDLIB_H=1;HAVE_STDINT_H=1;HAVE_LIBCRYPTO=1;HAVE_CONSENSUS_LIB=1;HAVE_DECL_EVP_MD_CTX_NEW=1;HAVE_DECL_STRERROR_R=1;HAVE_DECL_STRNLEN=1;HAVE_FUNC_ATTRIBUTE_VISIBILITY=1;HAVE_INTTYPES_H=1;HAVE_MEMORY_H=1;HAVE_STDIO_H=1;HAVE_STRERROR_R=1;HAVE_STRINGS_H=1;HAVE_STRING_H=1;HAVE_VISIBILITY_ATTRIBUTE=1;HAVE_WORKING_BOOST_SLEEP_FOR=1;HAVE___INT128=1;STDC_HEADERS=1;STRERROR_R_CHAR_P=1;ENABLE_WALLET=1;ENABLE_MODULE_RECOVERY=1;DISABLE_TESTS=1;USE_NUM_NONE=1;USE_FIELD_10X26=1;USE_FIELD_INV_BUILTIN=1;USE_SCALAR_8X32=1;USE_SCALAR_INV_BUILTIN=1;_SCL_SECURE_NO_WARNINGS=1;_CRT_SECURE_NO_WARNINGS=1;LEVELDB_PLATFORM_WINDOWS=1;LT_OBJDIR=".libs/";PACKAGE_NAME="LBTC";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <UndefinePreprocessorDefinitions>HAVE_MALLOPT_ARENA_MAX;HAVE_MSG_NOSIGNAL;MSG_NOSIGNAL;ENABLE_ZMQ;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\APP\boost_1_67_0;C:\APP\openssl-1.1.0h\include;C:\APP\libevent-2.1.8-stable\include;C:\APP\zeromq-4.2.3\include;C:\APP\db-4.8.30.NC\build_windows;C:\MinGW\include;$(SolutionDir)\src;$(SolutionDir)\src\univalue\include;$(SolutionDir)\src\leveldb;$(SolutionDir)\src\leveldb\include;$(SolutionDir)\src\leveldb\helpers\memenv;$(SolutionDir)\src\secp256k1;$(SolutionDir)\src\secp256k1\include;$(SolutionDir)\src\secp256k1\src;$(SolutionDir)\src\compat</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\APP\boost_1_67_0\stage\lib;C:\APP\openssl-1.1.0h\apps\x64;C:\APP\libevent-2.1.8-stable\lib\x64;C:\APP\zeromq-4.2.3\bin\x64\Release\v141\dynamic;C:\APP\db-4.8.30.NC\build_windows\x64\Release;C:\MinGW\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>msvcrt.lib;Shlwapi.lib;ws2_32.lib;wsock32.lib;libssl.lib;libcrypto.lib;libevent.lib;libevent_core.lib;libevent_extras.lib;libzmq.lib;libdb48.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>libc.lib;libcmt.lib;libcd.lib;libcmtd.lib;msvcrtd.lib;</IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
