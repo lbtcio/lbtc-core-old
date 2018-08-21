@@ -8,11 +8,9 @@
 #include <assert.h>
 #include <string.h>
 
-#ifdef OS_WIN
 extern "C" {
 #include "crypto/ctaes/ctaes.c"
 }
-#endif
 
 AES128Encrypt::AES128Encrypt(const unsigned char key[16])
 {
