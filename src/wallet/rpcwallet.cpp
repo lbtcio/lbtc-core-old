@@ -3403,6 +3403,113 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
     return UniValue(balance);
 }
 
+UniValue getcoinrank(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() > 1)
+        throw runtime_error(
+            "getcoinrank number\n"
+            "\nget lbtc coin rank.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"number\"           (string, optional) The number of address in top rank. Default 100.\n"
+            "\nResult:\n"
+            "[\n"
+            "    {\n"
+            "         \"address\": \"mkTLFbzw1YuLoRDSTXeDZbSbRaXMbFThCJ\", (string) The lbtc address\n"
+            "         \"balance\": n,                                      (numeric) The balance of address\n"
+            "    }\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getcoinrank", "")
+            + HelpExampleCli("getcoinrank", "\"100\"")
+            + HelpExampleRpc("getcoinrank", "")
+            + HelpExampleRpc("getcoinrank", "\"100\"")
+        );
+
+    int number = 100;
+    if(request.params.size() == 1) {
+        number = atoi(request.params[0].get_str().c_str());
+        if(number < 0) {
+            number = 100;
+        }
+    }
+
+    std::map<uint64_t, CMyAddress> result = Vote::GetInstance().GetCoinRank(number);
+
+    UniValue jsonResult(UniValue::VARR);
+    for(auto it = result.rbegin(); it != result.rend(); ++it) {
+        UniValue obj(UniValue::VOBJ);
+
+        CBitcoinAddress a;
+        if(it->second.second == CChainParams::PUBKEY_ADDRESS) {
+            CKeyID id(it->second.first);
+            a.Set(id);
+        } else if(it->second.second == CChainParams::SCRIPT_ADDRESS) {
+            CScriptID id(it->second.first);
+            a.Set(id);
+        }
+
+        obj.push_back(Pair("address", a.ToString().c_str()));
+        obj.push_back(Pair("balance", it->first));
+        jsonResult.push_back(obj);
+    }
+
+    return jsonResult;
+}
+
+UniValue getcoindistribution(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() < 1)
+        throw runtime_error(
+            "getcoindistribution threshold\n"
+            "\nget lbtc coin distribution.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"threshold\"           (string, required) The Segmental threshold. At least one threshold\n"
+            "\nResult:\n"
+            "[\n"
+            "    {\n"
+            "         \"threshold\": n,    (numeric) Segmental threshold.\n"
+            "         \"addresses\": n,    (numeric) The number of address.\n"
+            "         \"coins\": n,        (numeric) The total amount of lbtc coin.\n"
+            "    }\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getcoindistribution", "\"10000\" \"1000000\"")
+            + HelpExampleRpc("getcoinrank", "\"100\" \"1000000\"")
+        );
+
+    std::set<uint64_t> distribution;
+    for(auto i=0; i < request.params.size(); ++i) {
+        int64_t d = atol(request.params[i].get_str().c_str());
+        if(d <= 0) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("para: ") + request.params[0].get_str() + string(" is negative"));
+        }
+
+        distribution.insert(d);
+    }
+
+    std::map<uint64_t, std::pair<uint64_t, uint64_t>> result =  Vote::GetInstance().GetCoinDistribution(distribution);
+
+    UniValue jsonResult(UniValue::VARR);
+    for(auto& it : result) {
+        UniValue obj(UniValue::VOBJ);
+
+        obj.push_back(Pair("threshold", it.first));
+        obj.push_back(Pair("addresses", it.second.first));
+        obj.push_back(Pair("coins", it.second.second));
+        jsonResult.push_back(obj);
+    }
+
+    return jsonResult;
+}
+
 UniValue getdelegatevotes(const JSONRPCRequest& request)
 {
     if (!EnsureWalletIsAvailable(request.fHelp))
@@ -3642,6 +3749,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrase",         &walletpassphrase,         true,   {"passphrase","timeout"} },
     { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true,   {"txid"} },
     { "wallet",             "getaddressbalance",        &getaddressbalance,        true,   {"getaddressbalance", "address"} },
+    { "wallet",             "getcoinrank",              &getcoinrank,              true,   {"getcoinrank"} },
+    { "wallet",             "getcoindistribution",      &getcoindistribution,      true,   {"getcoindistribution", "threshold"} },
     { "dpos",               "register",                 &registe,                  true,   {"register", "address"} },
     { "dpos",               "vote",                     &vote,                     true,   {"vote", "fromaddress", "addresses"} },
     { "dpos",               "cancelvote",               &cancelvote,               true,   {"cancelvote", "fromaddress", "delegatename"} },

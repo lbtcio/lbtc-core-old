@@ -34,11 +34,11 @@ struct CAddressIndexKey {
         //hashBytes.Serialize(s, nType, nVersion);
         hashBytes.Serialize(s);
         // Heights are stored big-endian for key sorting in LevelDB
-        ser_writedata32(s, blockHeight);
-        ser_writedata32(s, txindex);
+        ser_writedata32be(s, blockHeight);
+        ser_writedata32be(s, txindex);
         //txhash.Serialize(s, nType, nVersion);
         txhash.Serialize(s);
-        ser_writedata32(s, index);
+        ser_writedata32be(s, index);
         char f = spending;
         ser_writedata8(s, f);
     }
@@ -48,11 +48,11 @@ struct CAddressIndexKey {
         type = ser_readdata8(s);
         //hashBytes.Unserialize(s, nType, nVersion);
         hashBytes.Unserialize(s);
-        blockHeight = ser_readdata32(s);
-        txindex = ser_readdata32(s);
+        blockHeight = ser_readdata32be(s);
+        txindex = ser_readdata32be(s);
         //txhash.Unserialize(s, nType, nVersion);
         txhash.Unserialize(s);
-        index = ser_readdata32(s);
+        index = ser_readdata32be(s);
         char f = ser_readdata8(s);
         spending = f;
     }
@@ -137,7 +137,7 @@ struct CAddressIndexIteratorHeightKey {
         ser_writedata8(s, type);
         //hashBytes.Serialize(s, nType, nVersion);
         hashBytes.Serialize(s);
-        ser_writedata32(s, blockHeight);
+        ser_writedata32be(s, blockHeight);
     }
     template<typename Stream>
     //void Unserialize(Stream& s, int nType, int nVersion) {
@@ -145,7 +145,7 @@ struct CAddressIndexIteratorHeightKey {
         type = ser_readdata8(s);
         //hashBytes.Unserialize(s, nType, nVersion);
         hashBytes.Unserialize(s);
-        blockHeight = ser_readdata32(s);
+        blockHeight = ser_readdata32be(s);
     }
 
     CAddressIndexIteratorHeightKey(unsigned int addressType, uint160 addressHash, int height) {

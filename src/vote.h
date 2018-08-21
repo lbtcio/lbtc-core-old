@@ -67,6 +67,9 @@ public:
     static const int MaxNumberOfVotes = 51;
     uint64_t GetDelegateFunds(const CMyAddress& address);
 
+    std::map<uint64_t, CMyAddress> GetCoinRank(int num);
+    std::map<uint64_t, std::pair<uint64_t, uint64_t>> GetCoinDistribution(const std::set<uint64_t>&);
+
 private:
     uint64_t _GetAddressBalance(const CMyAddress& address);
     uint64_t _UpdateAddressBalance(const CMyAddress& id, int64_t value);

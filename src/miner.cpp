@@ -1200,24 +1200,24 @@ bool DPoS::CheckBlockHeader(const CBlockHeader& block)
         return true;
     }
 
-    if(Params().NetworkIDString() == "main") {
-    int r = FastCheckBlockHash(block);
-    if(r < 0)
-        return false;
-    else if(r > 0) 
-        return true;
-
-    if(block.nTime > time(NULL) + 3) {
-        return false;
-    } 
-    }
-    
     BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
     if (mi != mapBlockIndex.end()) {
         if(mi->second->nHeight >= 894177) {
             if((block.nVersion & (((uint32_t)1) << 16)) == false) {
                 return false;
             }
+        }
+    }
+
+    if(Params().NetworkIDString() == "main") {
+        int r = FastCheckBlockHash(block.GetHash(), mi->second->nHeight + 1);
+        if(r < 0)
+            return false;
+        else if(r > 0)
+            return true;
+
+        if(block.nTime > time(NULL) + 3) {
+            return false;
         }
     }
 
@@ -1265,10 +1265,6 @@ bool DPoS::CheckBlock(const CBlockIndex& blockindex, bool fIsCheckDelegateInfo)
         SetStartTime(chainActive[nDposStartHeight -1]->nTime);
     }
 
-    if(IsNeedCheckBlockHashHash(blockindex.nHeight)) {
-        return true;
-    }
-
     CBlock block;
     if(ReadBlockFromDisk(block, &blockindex, Params().GetConsensus()) == false) {
         return false;
@@ -1296,7 +1292,16 @@ bool DPoS::CheckBlock(const CBlock& block, bool fIsCheckDelegateInfo)
     if(nBlockHeight < nForkHeight) {
         return true;
     }
-    
+
+    if(Params().NetworkIDString() == "main") {
+        int r = FastCheckBlockHash(block.GetHash(), nBlockHeight);
+        if(r > 0) {
+            return true;
+        } else if(r < 0) {
+            return false;
+        }
+    }
+
     if(CheckTransactionVersion(block) == false) 
         return false;
 
@@ -1380,19 +1385,19 @@ bool DPoS::CheckTransactionVersion(const CBlock& block)
     return true;
 }
 
-int DPoS::FastCheckBlockHash(const CBlockHeader& header)
+int DPoS::FastCheckBlockHash(const uint256& hash, uint64_t height)
 {
-    int ret = -1;
-    BlockMap::iterator it = mapBlockIndex.find(header.hashPrevBlock);
-    if (it != mapBlockIndex.end()) {
-        if(IsNeedCheckBlockHashHash(it->second->nHeight+1)) {
-            if(CheckBlockHashHash(header.GetHash(), it->second->nHeight + 1) == false) {
-                ret = -1;
-            } else {
-                ret = 1;
-            }
+    int ret = 0;
+    if(height < 622578 || height > 1334286) {
+        return ret;
+    }
+
+    auto it = mapBlockHash.find(height);
+    if(it != mapBlockHash.end()) {
+        if(it->second == hash.ToString()) {
+            ret = 1;
         } else {
-            ret = 0;
+            ret = -1;
         }
     }
 

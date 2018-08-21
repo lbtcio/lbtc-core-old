@@ -183,7 +183,7 @@ bool CBlockTreeDB::ReadAddressIndex(uint160 addressHash, int type,
         boost::this_thread::interruption_point();
         std::pair<char,CAddressIndexKey> key;
         if (pcursor->GetKey(key) && key.first == DB_ADDRESSINDEX && key.second.hashBytes == addressHash) {
-            if (end > 0 && key.second.blockHeight > end) {
+            if (end > 0 && key.second.blockHeight >= end) {
                 break;
             }
             CAmount nValue;

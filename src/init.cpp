@@ -239,7 +239,7 @@ void Shutdown()
         delete pblocktree;
         pblocktree = NULL;
 
-        sleep(5);
+        //sleep(5);
     }
 #ifdef ENABLE_WALLET
     if (pwalletMain)

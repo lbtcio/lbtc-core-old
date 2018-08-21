@@ -296,7 +296,7 @@ public:
 
 private:
     bool CheckBlock(const CBlock& block, bool fIsCheckDelegateInfo);
-    static int FastCheckBlockHash(const CBlockHeader& header);
+    static int FastCheckBlockHash(const uint256& hash, uint64_t height);
     std::vector<Delegate> SortDelegate(const std::vector<Delegate>& delegates);
     bool CheckTransactionVersion(const CBlock& block);
 

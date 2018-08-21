@@ -717,6 +717,7 @@ bool Vote::Read()
 {
     FILE* file = NULL;
     unsigned char buff[20];
+    unsigned char strHash[64];
     uint32_t count = 0;
     uint64_t balance = 0;
 
@@ -773,11 +774,11 @@ bool Vote::Read()
     if(file) {
     while(1)
     {
-        if(fread(&buff[0], 64, 1, file) <= 0) {
+        if(fread(&strHash[0], 64, 1, file) <= 0) {
             break;
         }
         uint256 hash;
-        hash.SetHex((const char*)&buff[0]);
+        hash.SetHex((const char*)&strHash[0]);
 
         uint64_t height;
         fread(&height, sizeof(height), 1, file);
@@ -832,11 +833,11 @@ bool Vote::Read()
 
             CKeyID delegate(uint160(std::vector<unsigned char>(&buff[0], &buff[0] + sizeof(buff))));
 
-            if(fread(&buff[0], 64, 1, file) <= 0) {
+            if(fread(&strHash[0], 64, 1, file) <= 0) {
                 break;
             }
             uint256 hash;
-            hash.SetHex((const char*)&buff[0]);
+            hash.SetHex((const char*)&strHash[0]);
 
             multiAddress[make_pair(delegate, type)] = hash;
         }
@@ -999,4 +1000,42 @@ bool Vote::DelDelegateMultiaddress(const CMyAddress& delegate, const CMyAddress&
     }
 
     return ret;
+}
+
+std::map<uint64_t, CMyAddress> Vote::GetCoinRank(int num)
+{
+    std::map<uint64_t, CMyAddress> result;
+
+    read_lock r(lockVote);
+    for(auto& item : mapAddressBalance) {
+        result[item.second] = item.first;
+        if(result.size() > (uint32_t)num) {
+            result.erase(result.begin());
+        }
+    }
+
+    return result;
+}
+
+std::map<uint64_t, std::pair<uint64_t, uint64_t>> Vote::GetCoinDistribution(const std::set<uint64_t>& arg)
+{
+    std::map<uint64_t, std::pair<uint64_t, uint64_t>> result;
+
+    read_lock r(lockVote);
+
+    for(auto& it : arg) {
+        result[it] = std::make_pair(0, 0);
+    }
+
+    for(auto& item : mapAddressBalance) {
+        for(auto& it : result) {
+            if(item.second <= it.first) {
+                it.second.first++;
+                it.second.second+= item.second;
+                break;
+            }
+        }
+    }
+
+    return result;
 }

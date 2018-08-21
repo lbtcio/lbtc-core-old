@@ -653,8 +653,10 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
             "getaddresstxids address maxnumber\n"
             "\nReturns transactions on the address.\n"
             "\nArguments:\n"
-            "1. address       (string, required) The address\n"
-            "2. maxnumber     (number, optional) The max number of transactions hash. Default value is 100\n"
+            "1. address           (string, required) The address\n"
+            "2. maxnumber         (number, optional) The max number of transactions hash\n"
+            "3. startblocknumber  (number, optional) Fetch transaction id from the set startblocknumber\n"
+            "4. endblocknumber    (number, optional) Fetch transaction id from the set endblocknumber\n"
             "\nResult:\n"
             "[\n"
                 "{\n"
@@ -665,16 +667,38 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
             "]\n"
             "\nExamples:\n"
             + HelpExampleCli("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\"")
-            + HelpExampleCli("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\" 200")
+            + HelpExampleCli("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\" 200 10000 100000")
             + HelpExampleRpc("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\"")
-            + HelpExampleRpc("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\", 200")
+            + HelpExampleRpc("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\", 200 10000 1000000")
         );
 
-    int max_count = 100;
-    if(request.params.size() == 2) {
-        max_count = atoi(request.params[1].get_str().c_str());
-        if(max_count <= 0) {
+    if((request.params.size() == 1
+        || request.params.size() == 2
+        || request.params.size() == 4) == false) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid parameter");
+    }
+
+    int maxCount = 100;
+    if(request.params.size() >= 2) {
+        maxCount = atoi(request.params[1].get_str().c_str());
+        if(maxCount <= 0) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid maxnumber");
+        }
+    }
+
+    int64_t startBlockNum = -1;
+    int64_t endBlockNum = -1;
+    if(request.params.size() == 4) {
+        startBlockNum = atoi(request.params[2].get_str().c_str());
+        endBlockNum = atoi(request.params[3].get_str().c_str());
+        if(startBlockNum <= 0) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid startBlockNum");
+        }
+        if(endBlockNum <= 0) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid endBlockNum");
+        }
+        if(endBlockNum < startBlockNum) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid endBlockNum, endBlockNum < startBlockNUm");
         }
     }
 
@@ -689,7 +713,7 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
 
-    if (!pblocktree->ReadAddressIndex(hashBytes, type, addressIndex)) {
+    if (!pblocktree->ReadAddressIndex(hashBytes, type, addressIndex, startBlockNum, endBlockNum)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
     }
     }
@@ -703,7 +727,7 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
         }
         set_hxs.insert(it->first.txhash.GetHex());
 
-        if(map_result.size() >= (size_t)max_count) {
+        if(map_result.size() >= (size_t)maxCount) {
             if((uint64_t)it->first.blockHeight <= map_result.begin()->first) {
                 continue;
             }
