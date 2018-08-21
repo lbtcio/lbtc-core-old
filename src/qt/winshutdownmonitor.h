@@ -10,6 +10,7 @@
 #include <QString>
 
 #if QT_VERSION >= 0x050000
+#include <windows.h>
 #include <windef.h> // for HWND
 
 #include <QAbstractNativeEventFilter>

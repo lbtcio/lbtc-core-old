@@ -374,7 +374,7 @@ void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
     window = new BitcoinGUI(platformStyle, networkStyle, 0);
 
-    pollShutdownTimer = new QTimer(window);
+    pollShutdownTimer = new QTimer(window);//QTimer trigger detectShutdown() and then shutdown
     connect(pollShutdownTimer, SIGNAL(timeout()), window, SLOT(detectShutdown()));
     pollShutdownTimer->start(200);
 }
@@ -546,7 +546,7 @@ int main(int argc, char *argv[])
 #endif
 
     Q_INIT_RESOURCE(bitcoin);
-    Q_INIT_RESOURCE(bitcoin_locale);
+    //Q_INIT_RESOURCE(bitcoin_locale);
 
     BitcoinApplication app(argc, argv);
 #if QT_VERSION > 0x050100
@@ -689,7 +689,7 @@ int main(int argc, char *argv[])
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
         WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely...").arg(QObject::tr(PACKAGE_NAME)), (HWND)app.getMainWinId());
 #endif
-        app.exec();
+        app.exec(); //QT client "File->Exit"
         app.requestShutdown();
         app.exec();
     } catch (const std::exception& e) {
