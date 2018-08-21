@@ -214,8 +214,8 @@
         <translation>&amp;Opsies</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>LBTC</source>
+        <translation>LBTC</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -770,7 +770,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>LBTC-core</name>
     <message>
         <source>Options:</source>
         <translation>Opsies:</translation>

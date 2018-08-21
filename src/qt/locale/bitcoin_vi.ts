@@ -162,6 +162,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>LBTC-core</name>
     </context>
 </TS>

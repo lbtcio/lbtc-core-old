@@ -114,8 +114,8 @@
         <translation>Newid y cyfrinymadrodd a ddefnyddiwyd ar gyfer amgryptio'r waled</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>LBTC</source>
+        <translation>LBTC</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -478,14 +478,14 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>LBTC-core</name>
     <message>
         <source>Options:</source>
         <translation>Opsiynau:</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Craidd Bitcoin</translation>
+        <source>LBTC Core</source>
+        <translation>Craidd LBTC</translation>
     </message>
     <message>
         <source>Information</source>
