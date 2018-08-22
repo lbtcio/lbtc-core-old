@@ -544,9 +544,6 @@
     <ClCompile Include="..\src\qt\winshutdownmonitor.cpp">
       <Filter>Common\qt</Filter>
     </ClCompile>
-    <ClCompile Include="..\bitcoind\tokencontract.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\netbase.cpp">
       <Filter>Common\src</Filter>
     </ClCompile>

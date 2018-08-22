@@ -98,17 +98,18 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32_WINDOWS;OS_WIN;HAVE_CXX11=1;HAVE_BOOST=1;HAVE_BOOST_CHRONO=1;HAVE_BOOST_FILESYSTEM=1;HAVE_BOOST_PROGRAM_OPTIONS=1;HAVE_BOOST_SYSTEM=1;HAVE_BOOST_THREAD=1;HAVE_WORKING_BOOST_SLEEP=1;HAVE_STDLIB_H=1;HAVE_STDINT_H=1;HAVE_LIBCRYPTO=1;HAVE_CONSENSUS_LIB=1;HAVE_DECL_EVP_MD_CTX_NEW=1;HAVE_DECL_STRERROR_R=1;HAVE_DECL_STRNLEN=1;HAVE_FUNC_ATTRIBUTE_VISIBILITY=1;HAVE_INTTYPES_H=1;HAVE_MEMORY_H=1;HAVE_STDIO_H=1;HAVE_STRERROR_R=1;HAVE_STRINGS_H=1;HAVE_STRING_H=1;HAVE_VISIBILITY_ATTRIBUTE=1;HAVE_WORKING_BOOST_SLEEP_FOR=1;HAVE___INT128=1;STDC_HEADERS=1;STRERROR_R_CHAR_P=1;ENABLE_WALLET=1;ENABLE_MODULE_RECOVERY=1;DISABLE_TESTS=1;USE_NUM_NONE=1;USE_FIELD_10X26=1;USE_FIELD_INV_BUILTIN=1;USE_SCALAR_8X32=1;USE_SCALAR_INV_BUILTIN=1;_SCL_SECURE_NO_WARNINGS=1;_CRT_SECURE_NO_WARNINGS=1;LEVELDB_PLATFORM_WINDOWS=1;LT_OBJDIR=".libs/";PACKAGE_NAME="LBTC";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\src;$(SolutionDir)\src\compat;$(SolutionDir)\src\univalue\include;$(SolutionDir)\src\leveldb;$(SolutionDir)\src\leveldb\include;$(SolutionDir)\src\leveldb\helpers\memenv;$(SolutionDir)\src\secp256k1;$(SolutionDir)\src\secp256k1\include;$(SolutionDir)\src\secp256k1\src;C:\APP\boost_1_67_0;C:\APP\openssl-1.1.0h\include;C:\APP\libevent-2.1.8-stable\include;C:\APP\zeromq-4.2.3\include;C:\APP\db-4.8.30.NC\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\src;$(SolutionDir)\src\compat;$(SolutionDir)\src\univalue\include;$(SolutionDir)\src\leveldb;$(SolutionDir)\src\leveldb\include;$(SolutionDir)\src\leveldb\helpers\memenv;$(SolutionDir)\src\secp256k1;$(SolutionDir)\src\secp256k1\include;$(SolutionDir)\src\secp256k1\src;C:\APP\boost_1_67_0;C:\APP\openssl-1.1.0h\include;C:\APP\libevent-2.1.8-stable\include;C:\APP\db-4.8.30.NC\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4101;4244;4267;4273;4477;</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <UndefinePreprocessorDefinitions>HAVE_MALLOPT_ARENA_MAX;HAVE_MSG_NOSIGNAL;MSG_NOSIGNAL;ENABLE_ZMQ;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\APP\boost_1_67_0\stage\lib;C:\APP\openssl-1.1.0h\apps\x86;C:\APP\libevent-2.1.8-stable\lib\x86;C:\APP\zeromq-4.2.3\bin\Win32\Debug\v141\dynamic;C:\MinGW\lib;C:\APP\db-4.8.30.NC\build_windows\Win32\Debug</AdditionalLibraryDirectories>
-      <AdditionalDependencies>msvcrtd.lib;Shlwapi.lib;ws2_32.lib;wsock32.lib;libssl.lib;libcrypto.lib;libevent.lib;libevent_core.lib;libevent_extras.lib;libzmq.lib;libdb48d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\APP\boost_1_67_0\stage\lib;C:\APP\openssl-1.1.0h\apps\x86;C:\APP\libevent-2.1.8-stable\lib\x86;C:\APP\db-4.8.30.NC\build_windows\Win32\Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>msvcrtd.lib;Shlwapi.lib;ws2_32.lib;wsock32.lib;libssl.lib;libcrypto.lib;libevent.lib;libevent_core.lib;libevent_extras.lib;libdb48d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libc.lib;libcmt.lib;msvcrt.lib;libcd.lib;libcmtd.lib;</IgnoreSpecificDefaultLibraries>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
@@ -116,21 +117,23 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_WIN32_WINDOWS;OS_WIN;HAVE_CXX11=1;HAVE_BOOST=1;HAVE_BOOST_CHRONO=1;HAVE_BOOST_FILESYSTEM=1;HAVE_BOOST_PROGRAM_OPTIONS=1;HAVE_BOOST_SYSTEM=1;HAVE_BOOST_THREAD=1;HAVE_WORKING_BOOST_SLEEP=1;HAVE_STDLIB_H=1;HAVE_STDINT_H=1;HAVE_LIBCRYPTO=1;HAVE_CONSENSUS_LIB=1;HAVE_DECL_EVP_MD_CTX_NEW=1;HAVE_DECL_STRERROR_R=1;HAVE_DECL_STRNLEN=1;HAVE_FUNC_ATTRIBUTE_VISIBILITY=1;HAVE_INTTYPES_H=1;HAVE_MEMORY_H=1;HAVE_STDIO_H=1;HAVE_STRERROR_R=1;HAVE_STRINGS_H=1;HAVE_STRING_H=1;HAVE_VISIBILITY_ATTRIBUTE=1;HAVE_WORKING_BOOST_SLEEP_FOR=1;HAVE___INT128=1;STDC_HEADERS=1;STRERROR_R_CHAR_P=1;ENABLE_WALLET=1;ENABLE_MODULE_RECOVERY=1;DISABLE_TESTS=1;USE_NUM_NONE=1;USE_FIELD_10X26=1;USE_FIELD_INV_BUILTIN=1;USE_SCALAR_8X32=1;USE_SCALAR_INV_BUILTIN=1;_SCL_SECURE_NO_WARNINGS=1;_CRT_SECURE_NO_WARNINGS=1;LEVELDB_PLATFORM_WINDOWS=1;LT_OBJDIR=".libs/";PACKAGE_NAME="LBTC";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32_WINDOWS;OS_WIN;HAVE_CXX11=1;HAVE_BOOST=1;HAVE_BOOST_CHRONO=1;HAVE_BOOST_FILESYSTEM=1;HAVE_BOOST_PROGRAM_OPTIONS=1;HAVE_BOOST_SYSTEM=1;HAVE_BOOST_THREAD=1;HAVE_WORKING_BOOST_SLEEP=1;HAVE_STDLIB_H=1;HAVE_STDINT_H=1;HAVE_LIBCRYPTO=1;HAVE_CONSENSUS_LIB=1;HAVE_DECL_EVP_MD_CTX_NEW=1;HAVE_DECL_STRERROR_R=1;HAVE_DECL_STRNLEN=1;HAVE_FUNC_ATTRIBUTE_VISIBILITY=1;HAVE_INTTYPES_H=1;HAVE_MEMORY_H=1;HAVE_STDIO_H=1;HAVE_STRERROR_R=1;HAVE_STRINGS_H=1;HAVE_STRING_H=1;HAVE_VISIBILITY_ATTRIBUTE=1;HAVE_WORKING_BOOST_SLEEP_FOR=1;HAVE___INT128=1;STDC_HEADERS=1;STRERROR_R_CHAR_P=1;ENABLE_WALLET=1;ENABLE_MODULE_RECOVERY=1;DISABLE_TESTS=1;USE_NUM_NONE=1;USE_FIELD_10X26=1;USE_FIELD_INV_BUILTIN=1;USE_SCALAR_8X32=1;USE_SCALAR_INV_BUILTIN=1;_SCL_SECURE_NO_WARNINGS=1;_CRT_SECURE_NO_WARNINGS=1;LEVELDB_PLATFORM_WINDOWS=1;LT_OBJDIR=".libs/";PACKAGE_NAME="LBTC";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <UndefinePreprocessorDefinitions>HAVE_MALLOPT_ARENA_MAX;HAVE_MSG_NOSIGNAL;MSG_NOSIGNAL;ENABLE_ZMQ</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\src;$(SolutionDir)\src\compat;$(SolutionDir)\src\univalue\include;$(SolutionDir)\src\leveldb;$(SolutionDir)\src\leveldb\include;$(SolutionDir)\src\leveldb\helpers\memenv;$(SolutionDir)\src\secp256k1;$(SolutionDir)\src\secp256k1\include;$(SolutionDir)\src\secp256k1\src;C:\APP\boost_1_67_0;C:\APP\openssl-1.1.0h\include;C:\APP\libevent-2.1.8-stable\include;C:\APP\zeromq-4.2.3\include;C:\APP\db-4.8.30.NC\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\src;$(SolutionDir)\src\compat;$(SolutionDir)\src\univalue\include;$(SolutionDir)\src\leveldb;$(SolutionDir)\src\leveldb\include;$(SolutionDir)\src\leveldb\helpers\memenv;$(SolutionDir)\src\secp256k1;$(SolutionDir)\src\secp256k1\include;$(SolutionDir)\src\secp256k1\src;C:\APP\boost_1_67_0;C:\APP\openssl-1.1.0h\include;C:\APP\libevent-2.1.8-stable\include;C:\APP\db-4.8.30.NC\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>msvcrtd.lib;Shlwapi.lib;ws2_32.lib;wsock32.lib;libssl.lib;libcrypto.lib;libevent.lib;libevent_core.lib;libevent_extras.lib;libdb48d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libc.lib;libcmt.lib;msvcrt.lib;libcd.lib;libcmtd.lib;</IgnoreSpecificDefaultLibraries>
+      <AdditionalLibraryDirectories>C:\APP\boost_1_67_0\stage\lib;C:\APP\openssl-1.1.0h\apps\x64;C:\APP\libevent-2.1.8-stable\lib\x64;C:\APP\db-4.8.30.NC\build_windows\x64\Debug</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -143,7 +146,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_WIN32_WINDOWS;OS_WIN;HAVE_CXX11=1;HAVE_BOOST=1;HAVE_BOOST_CHRONO=1;HAVE_BOOST_FILESYSTEM=1;HAVE_BOOST_PROGRAM_OPTIONS=1;HAVE_BOOST_SYSTEM=1;HAVE_BOOST_THREAD=1;HAVE_WORKING_BOOST_SLEEP=1;HAVE_STDLIB_H=1;HAVE_STDINT_H=1;HAVE_LIBCRYPTO=1;HAVE_CONSENSUS_LIB=1;HAVE_DECL_EVP_MD_CTX_NEW=1;HAVE_DECL_STRERROR_R=1;HAVE_DECL_STRNLEN=1;HAVE_FUNC_ATTRIBUTE_VISIBILITY=1;HAVE_INTTYPES_H=1;HAVE_MEMORY_H=1;HAVE_STDIO_H=1;HAVE_STRERROR_R=1;HAVE_STRINGS_H=1;HAVE_STRING_H=1;HAVE_VISIBILITY_ATTRIBUTE=1;HAVE_WORKING_BOOST_SLEEP_FOR=1;HAVE___INT128=1;STDC_HEADERS=1;STRERROR_R_CHAR_P=1;ENABLE_WALLET=1;ENABLE_MODULE_RECOVERY=1;DISABLE_TESTS=1;USE_NUM_NONE=1;USE_FIELD_10X26=1;USE_FIELD_INV_BUILTIN=1;USE_SCALAR_8X32=1;USE_SCALAR_INV_BUILTIN=1;_SCL_SECURE_NO_WARNINGS=1;_CRT_SECURE_NO_WARNINGS=1;LEVELDB_PLATFORM_WINDOWS=1;LT_OBJDIR=".libs/";PACKAGE_NAME="LBTC";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\src;$(SolutionDir)\src\compat;$(SolutionDir)\src\univalue\include;$(SolutionDir)\src\leveldb;$(SolutionDir)\src\leveldb\include;$(SolutionDir)\src\leveldb\helpers\memenv;$(SolutionDir)\src\secp256k1;$(SolutionDir)\src\secp256k1\include;$(SolutionDir)\src\secp256k1\src;C:\APP\boost_1_67_0;C:\APP\openssl-1.1.0h\include;C:\APP\libevent-2.1.8-stable\include;C:\APP\zeromq-4.2.3\include;C:\APP\db-4.8.30.NC\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\src;$(SolutionDir)\src\compat;$(SolutionDir)\src\univalue\include;$(SolutionDir)\src\leveldb;$(SolutionDir)\src\leveldb\include;$(SolutionDir)\src\leveldb\helpers\memenv;$(SolutionDir)\src\secp256k1;$(SolutionDir)\src\secp256k1\include;$(SolutionDir)\src\secp256k1\src;C:\APP\boost_1_67_0;C:\APP\openssl-1.1.0h\include;C:\APP\libevent-2.1.8-stable\include;C:\APP\db-4.8.30.NC\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4101;4244;4267;4273;4477;</DisableSpecificWarnings>
       <UndefinePreprocessorDefinitions>HAVE_MALLOPT_ARENA_MAX;HAVE_MSG_NOSIGNAL;MSG_NOSIGNAL;ENABLE_ZMQ</UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -154,8 +157,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\APP\boost_1_67_0\stage\lib;C:\APP\openssl-1.1.0h\apps\x86;C:\APP\libevent-2.1.8-stable\lib\x86;C:\APP\zeromq-4.2.3\bin\Win32\Release\v141\dynamic;C:\MinGW\lib;C:\APP\db-4.8.30.NC\build_windows\Win32\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>msvcrt.lib;Shlwapi.lib;ws2_32.lib;wsock32.lib;libssl.lib;libcrypto.lib;libevent.lib;libevent_core.lib;libevent_extras.lib;libzmq.lib;libdb48.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\APP\boost_1_67_0\stage\lib;C:\APP\openssl-1.1.0h\apps\x86;C:\APP\libevent-2.1.8-stable\lib\x86;C:\APP\db-4.8.30.NC\build_windows\Win32\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>msvcrt.lib;Shlwapi.lib;ws2_32.lib;wsock32.lib;libssl.lib;libcrypto.lib;libevent.lib;libevent_core.lib;libevent_extras.lib;libdb48.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libc.lib;libcmt.lib;libcd.lib;libcmtd.lib;msvcrtd.lib;</IgnoreSpecificDefaultLibraries>
       <ShowProgress>NotSet</ShowProgress>
       <DelayLoadDLLs>
@@ -172,7 +175,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_WIN32_WINDOWS;OS_WIN;HAVE_CXX11=1;HAVE_BOOST=1;HAVE_BOOST_CHRONO=1;HAVE_BOOST_FILESYSTEM=1;HAVE_BOOST_PROGRAM_OPTIONS=1;HAVE_BOOST_SYSTEM=1;HAVE_BOOST_THREAD=1;HAVE_WORKING_BOOST_SLEEP=1;HAVE_STDLIB_H=1;HAVE_STDINT_H=1;HAVE_LIBCRYPTO=1;HAVE_CONSENSUS_LIB=1;HAVE_DECL_EVP_MD_CTX_NEW=1;HAVE_DECL_STRERROR_R=1;HAVE_DECL_STRNLEN=1;HAVE_FUNC_ATTRIBUTE_VISIBILITY=1;HAVE_INTTYPES_H=1;HAVE_MEMORY_H=1;HAVE_STDIO_H=1;HAVE_STRERROR_R=1;HAVE_STRINGS_H=1;HAVE_STRING_H=1;HAVE_VISIBILITY_ATTRIBUTE=1;HAVE_WORKING_BOOST_SLEEP_FOR=1;HAVE___INT128=1;STDC_HEADERS=1;STRERROR_R_CHAR_P=1;ENABLE_WALLET=1;ENABLE_MODULE_RECOVERY=1;DISABLE_TESTS=1;USE_NUM_NONE=1;USE_FIELD_10X26=1;USE_FIELD_INV_BUILTIN=1;USE_SCALAR_8X32=1;USE_SCALAR_INV_BUILTIN=1;_SCL_SECURE_NO_WARNINGS=1;_CRT_SECURE_NO_WARNINGS=1;LEVELDB_PLATFORM_WINDOWS=1;LT_OBJDIR=".libs/";PACKAGE_NAME="LBTC";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\src;$(SolutionDir)\src\compat;$(SolutionDir)\src\univalue\include;$(SolutionDir)\src\leveldb;$(SolutionDir)\src\leveldb\include;$(SolutionDir)\src\leveldb\helpers\memenv;$(SolutionDir)\src\secp256k1;$(SolutionDir)\src\secp256k1\include;$(SolutionDir)\src\secp256k1\src;C:\APP\boost_1_67_0;C:\APP\openssl-1.1.0h\include;C:\APP\libevent-2.1.8-stable\include;C:\APP\zeromq-4.2.3\include;C:\APP\db-4.8.30.NC\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\src;$(SolutionDir)\src\compat;$(SolutionDir)\src\univalue\include;$(SolutionDir)\src\leveldb;$(SolutionDir)\src\leveldb\include;$(SolutionDir)\src\leveldb\helpers\memenv;$(SolutionDir)\src\secp256k1;$(SolutionDir)\src\secp256k1\include;$(SolutionDir)\src\secp256k1\src;C:\APP\boost_1_67_0;C:\APP\openssl-1.1.0h\include;C:\APP\libevent-2.1.8-stable\include;C:\APP\db-4.8.30.NC\build_windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <UndefinePreprocessorDefinitions>HAVE_MALLOPT_ARENA_MAX;HAVE_MSG_NOSIGNAL;MSG_NOSIGNAL;ENABLE_ZMQ</UndefinePreprocessorDefinitions>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
@@ -182,8 +185,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\APP\boost_1_67_0\stage\lib;C:\APP\openssl-1.1.0h\apps\x64;C:\APP\libevent-2.1.8-stable\lib\x64;C:\APP\zeromq-4.2.3\bin\x64\Release\v141\dynamic;C:\APP\db-4.8.30.NC\build_windows\x64\Release;C:\MinGW\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>msvcrt.lib;Shlwapi.lib;ws2_32.lib;wsock32.lib;libssl.lib;libcrypto.lib;libevent.lib;libevent_core.lib;libevent_extras.lib;libzmq.lib;libdb48.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\APP\boost_1_67_0\stage\lib;C:\APP\openssl-1.1.0h\apps\x64;C:\APP\libevent-2.1.8-stable\lib\x64;C:\APP\db-4.8.30.NC\build_windows\x64\Release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>msvcrt.lib;Shlwapi.lib;ws2_32.lib;wsock32.lib;libssl.lib;libcrypto.lib;libevent.lib;libevent_core.lib;libevent_extras.lib;libdb48.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libc.lib;libcmt.lib;libcd.lib;libcmtd.lib;msvcrtd.lib;</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
