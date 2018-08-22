@@ -1002,13 +1002,13 @@ bool Vote::DelDelegateMultiaddress(const CMyAddress& delegate, const CMyAddress&
     return ret;
 }
 
-std::map<uint64_t, CMyAddress> Vote::GetCoinRank(int num)
+std::multimap<uint64_t, CMyAddress> Vote::GetCoinRank(int num)
 {
-    std::map<uint64_t, CMyAddress> result;
+    std::multimap<uint64_t, CMyAddress> result;
 
     read_lock r(lockVote);
     for(auto& item : mapAddressBalance) {
-        result[item.second] = item.first;
+        result.insert(make_pair(item.second, item.first));
         if(result.size() > (uint32_t)num) {
             result.erase(result.begin());
         }

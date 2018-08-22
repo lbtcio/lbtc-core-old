@@ -3437,7 +3437,7 @@ UniValue getcoinrank(const JSONRPCRequest& request)
         }
     }
 
-    std::map<uint64_t, CMyAddress> result = Vote::GetInstance().GetCoinRank(number);
+    std::multimap<uint64_t, CMyAddress> result = Vote::GetInstance().GetCoinRank(number);
 
     UniValue jsonResult(UniValue::VARR);
     for(auto it = result.rbegin(); it != result.rend(); ++it) {
