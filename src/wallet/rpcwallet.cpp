@@ -3481,8 +3481,8 @@ UniValue getcoindistribution(const JSONRPCRequest& request)
             "    }\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("getcoindistribution", "\"10000\" \"1000000\"")
-            + HelpExampleRpc("getcoinrank", "\"100\" \"1000000\"")
+            + HelpExampleCli("getcoindistribution", "\"10000\", \"1000000\"")
+            + HelpExampleRpc("getcoindistribution", "\"100\", \"1000000\"")
         );
 
     std::set<uint64_t> distribution;

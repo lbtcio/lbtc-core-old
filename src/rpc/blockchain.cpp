@@ -669,7 +669,7 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
             + HelpExampleCli("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\"")
             + HelpExampleCli("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\" 200 10000 100000")
             + HelpExampleRpc("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\"")
-            + HelpExampleRpc("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\", 200 10000 1000000")
+            + HelpExampleRpc("getaddresstxids", "\"15meUQSFQMUS6vUkw8D2htgkpxiNnSXBaT\", 200, 10000, 1000000")
         );
 
     if((request.params.size() == 1
