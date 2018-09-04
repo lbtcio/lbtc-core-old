@@ -10,6 +10,99 @@
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/filesystem.hpp>
 
+#include "base58.h"
+#include "script/script.h"
+#include "votedb.h"
+
+struct COpData{
+    uint8_t opcode;
+};
+
+struct CRegisterCommitteeData : public COpData {
+    std::string name;
+    std::string url;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+        ar & name;
+        ar & url;
+    }
+};
+
+struct CVoteCommitteeData : public COpData {
+    CKeyID committee;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+        ar & committee;
+    }
+};
+
+struct CCancelVoteCommitteeData : public COpData {
+    CKeyID committee;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+        ar & committee;
+    }
+};
+
+struct CSubmitBillData : public COpData {
+    CKeyID committee;
+    std::string title;
+    std::string detail;
+    std::string url;
+    std::vector<std::string> options;
+    uint64_t starttime;
+    uint64_t endtime;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+        ar & committee;
+        ar & title;
+        ar & detail;
+        ar & url;
+        ar & starttime;
+        ar & endtime;
+        ar & options;
+    }
+};
+
+struct CVoteBillData : public COpData {
+    uint160 id;
+    uint8_t index;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int version)
+    {
+        ar & id;
+        ar & index;
+    }
+};
+
+std::vector<unsigned char> StructToData(const CRegisterCommitteeData& data);
+std::vector<unsigned char> StructToData(const CVoteCommitteeData& data);
+std::vector<unsigned char> StructToData(const CCancelVoteCommitteeData& data);
+std::vector<unsigned char> StructToData(const CSubmitBillData& data);
+std::vector<unsigned char> StructToData(const CVoteBillData& data);
+std::string CheckStruct(const CSubmitBillData& data);
+
+template<typename Data>
+bool DataToStruct(Data& data, const CScript& script)
+{
+    bool ret = false;
+    return ret;
+}
+
+bool DataToStruct(CRegisterCommitteeData& data, const CScript& script);
+bool DataToStruct(CVoteCommitteeData& data, const CScript& script);
+bool DataToStruct(CSubmitBillData& data, const CScript& script);
+bool DataToStruct(CVoteBillData& data, const CScript& script);
+
 typedef std::pair<uint160, uint8_t> CMyAddress;
 
 struct key_hash
@@ -41,6 +134,8 @@ public:
     bool Store(int64_t height, const std::string& strBlockHash);
     bool Load(int64_t height, const std::string& strBlockHash);
 
+    static uint64_t GetBalance(const CKeyID& id) {return Vote::GetInstance().GetAddressBalance(CMyAddress(id, CChainParams::PUBKEY_ADDRESS));}
+
     uint64_t GetAddressBalance(const CMyAddress& id);
     void UpdateAddressBalance(const std::vector<std::pair<CMyAddress, int64_t>>& addressBalances);
 
@@ -63,6 +158,13 @@ public:
     bool DelDelegateMultiaddress(const CMyAddress& delegate, const CMyAddress& multiAddress, const uint256& txid);
     std::map<CMyAddress, uint256> GetDelegateMultiaddress(const CMyAddress& delegate);
 
+    CVoteDBK1<CKeyID, CRegisterCommitteeData, CKeyID>& GetCommittee() {
+        return committee;
+    }
+
+    CVoteDBK2<uint160, CSubmitBillData, CKeyID>& GetBill() {
+        return bill;
+    }
 
     static const int MaxNumberOfVotes = 51;
     uint64_t GetDelegateFunds(const CMyAddress& address);
@@ -100,7 +202,6 @@ private:
     std::map<CMyAddress, std::map<CMyAddress, uint256>>& GetDelegateMultiaddress() {return mapDelegateMultiaddress;}
     bool IsValidDelegate(const CMyAddress& address, uint64_t nMinHoldBalance);
 
-
 private:
     int64_t nVersion;
     const int64_t nCurrentVersion = -1;
@@ -125,8 +226,14 @@ private:
     std::string strInvalidVoteTxFileName;
     std::string strDelegateMultiaddressName;
 
+    std::string strCommitteeFileName;
+    std::string strBillFileName;
+
     std::string strOldBlockHash;
     int64_t nOldBlockHeight;
+
+    CVoteDBK1<CKeyID, CRegisterCommitteeData, CKeyID> committee;
+    CVoteDBK2<uint160, CSubmitBillData, CKeyID> bill;
 };
 
 #endif

@@ -54,6 +54,11 @@ struct ChainTxData;
 struct PrecomputedTransactionData;
 struct LockPoints;
 
+static const CAmount OP_REGISTER_COMMITTEE_FEE = 1 * COIN;
+static const CAmount OP_VOTE_COMMITTEE_FEE = 0.01 * COIN;
+static const CAmount OP_SUBMIT_BILL_FEE = 3 * COIN;
+static const CAmount OP_VOTE_BILL_FEE = 0.01 * COIN;
+
 /** Default for DEFAULT_WHITELISTRELAY. */
 static const bool DEFAULT_WHITELISTRELAY = true;
 /** Default for DEFAULT_WHITELISTFORCERELAY. */

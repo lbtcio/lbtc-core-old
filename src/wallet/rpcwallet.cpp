@@ -3143,6 +3143,44 @@ static void SendRegiste(const CBitcoinAddress &address, const std::string& name,
     }
 }
 
+static void SendWithOpreturn(const CBitcoinAddress &address, CWalletTx& wtxNew, uint64_t fee, const vector<unsigned char>& opreturn)
+{
+    CAmount curBalance = pwalletMain->GetBalance();
+    std::string strError;
+
+    CCoinControl coinControl;
+    coinControl.nMinimumTotalFee = fee;
+    coinControl.fAllowOtherInputs = true;
+
+    if (coinControl.nMinimumTotalFee > curBalance)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+
+    if (pwalletMain->GetBroadcastTransactions() && !g_connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
+    vector<unsigned char> opdata = pwalletMain->CreateVoteInfo(address.Get(), opreturn);
+    if(opdata.empty()) {
+        strError = strprintf("Error: CreateVoteInfo");
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
+
+    CReserveKey reservekey(pwalletMain);
+    CAmount nFeeRequired;
+    int nChangePosRet = -1;
+
+    vector<CRecipient> vecSend;
+    if ( !pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, &coinControl, true, &opdata)) {
+        strError = "SendWithOpreturn CreateTransaction error";
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
+
+    CValidationState state;
+    if (!pwalletMain->CommitTransaction(wtxNew, reservekey, g_connman.get(), state)) {
+        strError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
+}
+
 UniValue registe(const JSONRPCRequest& request)
 {
     if (!EnsureWalletIsAvailable(request.fHelp))
@@ -3181,6 +3219,865 @@ UniValue registe(const JSONRPCRequest& request)
     SendRegiste(address, request.params[1].get_str(), wtx); 
     
     return wtx.GetHash().GetHex();
+}
+
+string JsonToStruct(CBitcoinAddress& address, CRegisterCommitteeData& data, const JSONRPCRequest& request)
+{
+    string ret;
+    data.opcode = 0xc3;
+    address = CBitcoinAddress(request.params[0].get_str());
+    data.name = request.params[1].get_str();
+    data.url = request.params[2].get_str();
+
+    CKeyID id;
+    address.GetKeyID(id);
+    if(Vote::GetInstance().GetCommittee().GetRegiste(NULL, id)) {
+        ret = "The address has registerd";
+    } else {
+        auto& name = data.name;
+        auto f = [&name](const CKeyID& key, const CRegisterCommitteeData& value) -> bool {
+            bool ret = false;
+            if(value.name == name) {
+                ret = true;
+            }
+            return ret;
+        };
+
+        if(Vote::GetInstance().GetCommittee().FindRegiste(f)) {
+            ret = "The name has registerd";
+        }
+    }
+	if(data.name.size() > 32 || data.url.size() > 256) {
+		ret = "Name or Url length too long";
+	}
+
+    return ret;
+}
+
+string JsonToStruct(CBitcoinAddress& address, CVoteCommitteeData& data, const JSONRPCRequest& request)
+{
+    string ret;
+    data.opcode = 0xc4;
+    address = CBitcoinAddress(request.params[0].get_str());
+
+    string name = request.params[1].get_str();
+    CKeyID committee;
+    auto f = [&name, &committee](const CKeyID& key, const CRegisterCommitteeData& value) -> bool {
+        bool ret = false;
+        if(value.name == name) {
+            committee = key;
+            ret = true;
+        }
+        return ret;
+    };
+
+    if(Vote::GetInstance().GetCommittee().FindRegiste(f) == false) {
+        return "The name dosn't registed";
+    }
+
+    data.committee = committee;
+
+    CKeyID voterid;
+    address.GetKeyID(voterid);
+
+    if(Vote::GetInstance().GetCommittee().FindVoter(voterid)) {
+        ret = "The address has voted committee";
+    }
+
+    return ret;
+}
+
+string JsonToStruct(CBitcoinAddress& address, CCancelVoteCommitteeData& data, const JSONRPCRequest& request)
+{
+    string ret;
+    data.opcode = 0xc5;
+    address = CBitcoinAddress(request.params[0].get_str());
+
+    string name = request.params[1].get_str();
+    CKeyID committee;
+    auto f = [&name, &committee](const CKeyID& key, const CRegisterCommitteeData& value) -> bool {
+        bool ret = false;
+        if(value.name == name) {
+            committee = key;
+            ret = true;
+        }
+        return ret;
+    };
+
+    if(Vote::GetInstance().GetCommittee().FindRegiste(f) == false) {
+        return "The name dosn't registed";
+    }
+    data.committee = committee;
+
+    CKeyID committeeid;
+    CKeyID voterid;
+    address.GetKeyID(voterid);
+    auto f2 = [&committeeid, &voterid](const CKeyID& key, const std::map<CKeyID, uint64_t>& value) -> bool {
+        if(value.find(voterid) != value.end()) {
+            committeeid = key;
+            return true;
+        } else {
+            return false;
+        }
+    };
+
+    if(Vote::GetInstance().GetCommittee().FindVote(f2) == false) {
+        ret = "The address don't voted committee";
+    }
+
+    return ret;
+}
+
+string JsonToStruct(CBitcoinAddress& address, CSubmitBillData& data, const JSONRPCRequest& request)
+{
+    string ret;
+    data.opcode = 0xc6;
+    address = CBitcoinAddress(request.params[0].get_str());
+    data.title = request.params[1].get_str();
+    data.detail = request.params[2].get_str();
+    data.url = request.params[3].get_str();
+    //whh
+    //data.endtime = stol(request.params[4].get_str()) * 3600 * 24 + time(NULL);
+    data.endtime = stol(request.params[4].get_str()) + time(NULL);
+    for(uint8_t i = 5; i < request.params.size(); ++i) {
+        data.options.push_back(request.params[i].get_str());
+    }
+
+    CKeyID id;
+    address.GetKeyID(id);
+    if (!address.IsValid()) {
+        ret = "Invalid Bitcoin address!";
+    } else if(Vote::GetInstance().GetCommittee().GetRegiste(NULL, id) == false) {
+        ret = "The address don't registered";
+    } else if(Vote::GetInstance().GetBill().GetRegiste(NULL, Hash160(data.title.begin(), data.title.end()))) {
+        ret = "The bill has submited";
+    }
+
+    return ret;
+}
+
+string JsonToStruct(CBitcoinAddress& address, CVoteBillData& data, const JSONRPCRequest& request)
+{
+    string ret;
+    data.opcode = 0xc7;
+    address = CBitcoinAddress(request.params[0].get_str());
+    data.id.SetHex(request.params[1].get_str());
+    data.index = (uint8_t)stoi(request.params[2].get_str());
+
+    CKeyID id;
+    address.GetKeyID(id);
+    std::vector<std::map<CKeyID, uint64_t>> voters = Vote::GetInstance().GetBill().GetVote(data.id);
+    for(auto& i : voters) {
+        if(i.find(id) != i.end()) {
+            ret = "This address has voted the bill";
+            break;
+        }
+    }
+
+    CSubmitBillData bill;
+    Vote::GetInstance().GetBill().GetRegiste(&bill, data.id);
+    if(bill.options.size() == 0) {
+        ret = "bill no exited";
+    } else if(data.index >= bill.options.size()) {
+        ret = "option index Invalid";
+    } else if((uint64_t)time(NULL) > bill.endtime) {
+        ret = "the bill has completed";
+    }
+    return ret;
+}
+
+UniValue registercommittee(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 3 )
+        throw runtime_error(
+            "registercommittee address name"
+            "\nregister committee.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"address\"             (string, required) The lbtc address.\n"
+            "2. \"name\"                (string, required) The committee name.\n"
+            "3. \"url\"                 (string, required) The url related the committee.\n"
+            "\nResult:\n"
+            "\"txid:\"                  (string) The transaction id.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("registercommittee", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" \"testname\" \"www.test.com\"")
+            + HelpExampleRpc("registercommittee", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", \"testname\", \"www.test.com\"")
+        );
+
+    CBitcoinAddress address;
+    CRegisterCommitteeData data;
+    string err = JsonToStruct(address, data, request);
+    if(err.empty() == false) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, err);
+    }
+
+    CWalletTx wtx;
+    vector<unsigned char>&& opreturn = StructToData(data);
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+    EnsureWalletIsUnlocked();
+
+    SendWithOpreturn(address, wtx, OP_REGISTER_COMMITTEE_FEE, opreturn);
+
+    return wtx.GetHash().GetHex();
+}
+
+UniValue getcommittee(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+            "getcommittee address\n"
+            "\nget committee detail infomation.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"address\"             (string, required) The address of committee.\n"
+            "\nResult:\n"
+            "\"{\"\n"
+            "\"    name:\"              (string) The committee name.\n"
+            "\"    url:\"               (string) The committee related url.\n"
+            "\"}\"\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getcommittee", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
+            + HelpExampleRpc("getcommittee", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
+        );
+
+    CBitcoinAddress address(request.params[0].get_str());
+
+    CKeyID id;
+    address.GetKeyID(id);
+
+    CRegisterCommitteeData detail;
+    bool ret = Vote::GetInstance().GetCommittee().GetRegiste(&detail, id);
+
+    UniValue results(UniValue::VOBJ);
+
+    if(ret) {
+        std::map<CKeyID, uint64_t> voters = Vote::GetInstance().GetCommittee().GetVote(id);
+        uint64_t nTotalVote = 0;
+        for(auto& i : voters) {
+            nTotalVote += Vote::GetInstance().GetBalance(i.first);
+        }
+
+        results.push_back(Pair("name",  detail.name));
+        results.push_back(Pair("url",  detail.url));
+        results.push_back(Pair("votes",  nTotalVote));
+    }
+
+    return results;
+}
+
+UniValue votecommittee(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() !=2)
+        throw runtime_error(
+            "votecommittee address committeename\n"
+            "\nvote committee.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"address\"             (string, required) The lbtc address.\n"
+            "2. \"committeename\"       (string, required) The committee name to be voting.\n"
+            "\nResult:\n"
+            "\"txid:\"                  (string) The transaction id.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("votecommittee", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" \"testname\"")
+            + HelpExampleRpc("votecommittee", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", \"testname\"")
+        );
+
+    CBitcoinAddress address;
+    CVoteCommitteeData data;
+    string err = JsonToStruct(address, data, request);
+    if(err.empty() == false) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, err);
+    }
+
+    CWalletTx wtx;
+    vector<unsigned char>&& opreturn = StructToData(data);
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+    EnsureWalletIsUnlocked();
+
+    SendWithOpreturn(address, wtx, OP_VOTE_COMMITTEE_FEE, opreturn);
+    return wtx.GetHash().GetHex();
+}
+
+UniValue cancelvotecommittee(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() !=2)
+        throw runtime_error(
+            "cancelvotecommittee address committeename\n"
+            "\ncancel vote committee.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"address\"             (string, required) The lbtc address.\n"
+            "2. \"committeename\"       (string, required) The committee name to be cancel voting.\n"
+            "\nResult:\n"
+            "\"txid:\"                  (string) The transaction id.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("cancelvotecommittee", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" \"testname\"")
+            + HelpExampleRpc("cancelvotecommittee", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", \"testname\"")
+        );
+
+    CBitcoinAddress address;
+    CCancelVoteCommitteeData data;
+    string err = JsonToStruct(address, data, request);
+    if(err.empty() == false) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, err);
+    }
+
+    CWalletTx wtx;
+    vector<unsigned char>&& opreturn = StructToData(data);
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+    EnsureWalletIsUnlocked();
+
+    SendWithOpreturn(address, wtx, OP_VOTE_COMMITTEE_FEE, opreturn);
+    return wtx.GetHash().GetHex();
+}
+
+UniValue listcommitteevoters(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+            "listcommitteevoters committeename\n"
+            "\nlist committee received vote.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"committeename\"          (string, required) The committee name.\n"
+            "\nResult:\n"
+            "\"[\"\n"
+            "\"    {\"\n"
+            "\"        address:\"          (string) The voter address.\n"
+            "\"    }\"\n"
+            "\"]\"\n"
+            "\nExamples:\n"
+            + HelpExampleCli("listcommitteevoters", "\"test-name\"")
+            + HelpExampleRpc("listcommitteevoters", "\"test-name\"")
+        );
+
+    string name = request.params[0].get_str();
+    CKeyID address;
+    auto f = [&name, &address](const CKeyID& key, const CRegisterCommitteeData& value) -> bool {
+        bool ret = false;
+        if(value.name == name) {
+            address = key;
+            ret = true;
+        }
+        return ret;
+    };
+
+    if(Vote::GetInstance().GetCommittee().FindRegiste(f) == false) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "committee not register");
+    }
+
+    std::map<CKeyID, uint64_t> voters = Vote::GetInstance().GetCommittee().GetVote(address);
+
+    UniValue results(UniValue::VARR);
+    for(auto& it : voters) {
+        UniValue o(UniValue::VOBJ);
+        o.push_back(Pair("address",  CBitcoinAddress(it.first).ToString()));
+        results.push_back(o);
+    }
+
+    return results;
+}
+
+UniValue listcommitteebills(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+            "listcommitteebills committeename\n"
+            "\nlist the bills sumbit by the committee.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"committeename\"          (string, required) The committee name.\n"
+            "\nResult:\n"
+            "\"[\"\n"
+            "\"    {\"\n"
+            "\"        billid:\"          (string) The voter address.\n"
+            "\"    }\"\n"
+            "\"]\"\n"
+            "\nExamples:\n"
+            + HelpExampleCli("listcommitteebills", "\"test-name\"")
+            + HelpExampleRpc("listcommitteebills", "\"test-name\"")
+        );
+
+    string name = request.params[0].get_str();
+    CKeyID address;
+    auto f = [&name, &address](const CKeyID& key, const CRegisterCommitteeData& value) -> bool {
+        bool ret = false;
+        if(value.name == name) {
+            address = key;
+            ret = true;
+        }
+        return ret;
+    };
+
+    if(Vote::GetInstance().GetCommittee().FindRegiste(f) == false) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "committee not register");
+    }
+
+    vector<uint160> billids;
+    {
+    auto f = [&address, &billids](const uint160& key, const CSubmitBillData& value) -> bool {
+        if(value.committee == address) {
+            billids.push_back(key);
+        }
+        return false;
+    };
+
+    Vote::GetInstance().GetBill().FindRegiste(f);
+    }
+
+    UniValue results(UniValue::VARR);
+    for(auto& i : billids) {
+        UniValue o(UniValue::VOBJ);
+        o.push_back(Pair("billid",  i.GetHex()));
+        results.push_back(o);
+    }
+
+    return results;
+}
+
+UniValue listcommittees(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() > 0)
+        throw runtime_error(
+            "listcommittees\n"
+            "\nlist all committees.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "\nResult:\n"
+            "\"[\"\n"
+            "\"    {\"\n"
+            "\"        address:\"               (string) The LBTC address.\n"
+            "\"        name:\"                  (string) The committee name.\n"
+            "\"        url:\"                   (string) The url related committee.\n"
+            "\"    }\"\n"
+            "\"]\"\n"
+            "\nExamples:\n"
+            + HelpExampleCli("listcommittees", "")
+            + HelpExampleRpc("listcommittees", "")
+        );
+
+    vector<tuple<CKeyID, string, string>> committees;
+    auto f = [&committees](const CKeyID& key, const CRegisterCommitteeData& value) -> bool {
+        committees.push_back(make_tuple(key, value.name, value.url));
+        return false;
+    };
+
+    Vote::GetInstance().GetCommittee().FindRegiste(f);
+
+    UniValue results(UniValue::VARR);
+    for(auto& i : committees){
+        UniValue entry(UniValue::VOBJ);
+        entry.push_back(Pair("address",  CBitcoinAddress(get<0>(i)).ToString()));
+        entry.push_back(Pair("name",  get<1>(i)));
+        entry.push_back(Pair("url",  get<2>(i)));
+        results.push_back(entry);
+    }
+
+    return results;
+}
+
+UniValue listvotercommittees(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+            "listvotercommittees address\n"
+            "\nlist the voted committees.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"address\"                 (string, required) The address of voter.\n"
+            "\nResult:\n"
+            "\"[\"\n"
+            "\"    {\"\n"
+            "\"        address:\"           (string) The committee address.\n"
+            "\"        name:\"              (string) The committee name.\n"
+            "\"    }\"\n"
+            "\"]\"\n"
+            "\nExamples:\n"
+            + HelpExampleCli("listvotercommittees", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
+            + HelpExampleRpc("listvotercommittees", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
+        );
+
+    CBitcoinAddress address(request.params[0].get_str());
+    CKeyID voterid;
+    address.GetKeyID(voterid);
+
+    vector<CKeyID> committees;
+    auto f = [&voterid, &committees](const CKeyID& key, const std::map<CKeyID, uint64_t>& value) -> bool {
+        if(value.find(voterid) != value.end()) {
+            committees.push_back(key);
+        }
+        return false;
+    };
+
+    Vote::GetInstance().GetCommittee().FindVote(f);
+
+    UniValue results(UniValue::VARR);
+    for(auto& it : committees) {
+        CRegisterCommitteeData committee;
+        Vote::GetInstance().GetCommittee().GetRegiste(&committee, it);
+        UniValue o(UniValue::VOBJ);
+        o.push_back(Pair("address", CBitcoinAddress(it).ToString()));
+        o.push_back(Pair("name", committee.name));
+        results.push_back(o);
+    }
+
+    return results;
+}
+
+UniValue submitbill(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() < 7 )
+        throw runtime_error(
+            "submitbill address title detail url endtime options\n"
+            "\nsubmit bill.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"address\"             (string, required) The lbtc address.\n"
+            "2. \"title\"               (string, required) The bill title. The title not allow empty and the max length of title is 128 bytes.\n"
+            "3. \"detail\"              (string, required) The bill detail infomation. The max length of detail is 256 bytes.\n"
+            "4. \"url\"                 (string, required) The bill related url. The max length of url  is 256 bytes.\n"
+            "5. \"endtime\"             (numeric, required) The bill duration in days.\n"
+            "6. \"options\"             (string, required) The bill option1. The max lengh of option is 256 bytes.\n"
+            "7. \"options\"             (string, required) The bill option2.\n"
+            "8. \"options\"             (string, required) The other options. The max number of option is 16.\n"
+            "\nResult:\n"
+            "\"{\"\n"
+            "    \"txid:\"                   (string) The transaction id.\n"
+            "    \"billid:\"                 (string) The bill id.\n"
+            "\"}\"\n"
+            "\nExamples:\n"
+            + HelpExampleCli("submitbill", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" \"bill1\" \"modify test\" \"http://test.com/bill1\" \"24\" \"yes\" \"no\"")
+            + HelpExampleRpc("submitbill", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", \"bill1\", \"modify test\", \"http://test.com/bill1\", \"24\", \"yes\", \"no\"")
+        );
+
+    CBitcoinAddress address;
+    CSubmitBillData data;
+    string err = JsonToStruct(address, data, request);
+    if(err.empty() == false) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, err);
+    }
+
+    err = CheckStruct(data);
+    if(err.empty() == false) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, err);
+    }
+
+    CWalletTx wtx;
+    vector<unsigned char>&& opreturn = StructToData(data);
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+    EnsureWalletIsUnlocked();
+
+    SendWithOpreturn(address, wtx, OP_SUBMIT_BILL_FEE, opreturn);
+
+    UniValue obj(UniValue::VOBJ);
+    obj.push_back(Pair("txid", wtx.GetHash().GetHex()));
+    obj.push_back(Pair("billid", Hash160(data.title.begin(), data.title.end()).GetHex()));
+    return obj;
+}
+
+UniValue votebill(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() !=3)
+        throw runtime_error(
+            "votebill address billid billoptionindex\n"
+            "\nvote bill.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"address\"             (string, required) The lbtc address.\n"
+            "2. \"billid\"              (string, required) The bill id voted.\n"
+            "3. \"billoptionindex\"     (number, required) The index of this bill option.\n"
+            "\nResult:\n"
+            "\"txid:\"                  (string) The transaction id.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("votebill", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" \"c32418e7537b085bbf2cbada63320979c4e72936\" \"1\"")
+            + HelpExampleRpc("votebill", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", \"c32418e7537b085bbf2cbada63320979c4e72936\", \"1\"")
+        );
+
+    CBitcoinAddress address;
+    CVoteBillData data;
+    string err = JsonToStruct(address, data, request);
+    if(err.empty() == false) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, err);
+    }
+
+    CWalletTx wtx;
+    vector<unsigned char>&& opreturn = StructToData(data);
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+    EnsureWalletIsUnlocked();
+
+    SendWithOpreturn(address, wtx, OP_VOTE_BILL_FEE, opreturn);
+    return wtx.GetHash().GetHex();
+}
+
+UniValue listbills(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() > 0)
+        throw runtime_error(
+            "listbills\n"
+            "\nlist all bills.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "\nResult:\n"
+            "\"[\"\n"
+            "\"    {\"\n"
+            "\"        id:\"                (string) The bill id.\n"
+            "\"        title:\"             (string) The bill title.\n"
+            "\"        isfinished:\"        (bool) When the value of isfinished is set true, it means the vote of bill is finished.\n"
+            "\"        ispassed:\"          (bool) When the value of ispassed is set true, it means the vote of bill is passed.\n"
+            "\"        optoinindex:\"       (bool) The option with this optionindex won the most votes.\n"
+            "\"        totalvote:\"         (numeric) The bill total vote amount.\n"
+            "\"    }\"\n"
+            "\"]\"\n"
+            "\nExamples:\n"
+            + HelpExampleCli("listbills", "")
+            + HelpExampleRpc("listbills", "")
+        );
+
+    vector<pair<uint160, string>> billids;
+    auto f = [&billids](const uint160& key, const CSubmitBillData& value) -> bool {
+        billids.push_back(make_pair(key, value.title));
+        return false;
+    };
+
+    Vote::GetInstance().GetBill().FindRegiste(f);
+
+    UniValue results(UniValue::VARR);
+    for(auto it : billids){
+        UniValue entry(UniValue::VOBJ);
+        entry.push_back(Pair("id",  it.first.GetHex()));
+        entry.push_back(Pair("title",  it.second));
+
+        auto&& state = Vote::GetInstance().GetBill().GetState(it.first);
+        entry.push_back(Pair("isfinished",  state.bFinished));
+        entry.push_back(Pair("ispassed",  state.bPassed));
+        entry.push_back(Pair("optoinindex",  state.nOptionIndex));
+        entry.push_back(Pair("totalvote",  state.nTotalVote));
+        results.push_back(entry);
+    }
+
+    return results;
+}
+
+UniValue listbillvoters(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+            "listbillvoters\n"
+            "\nlist the bill voters.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"billid\"                 (string, required) The bill id.\n"
+            "\nResult:\n"
+            "\"[\"\n"
+            "\"    \"index:\"              (numeric) The index of bill options.\n"
+            "\"    \"voters:\"             (array) The voters info.\n"
+            "\"    [\"\n"
+            "\"        {\"\n"
+            "\"            address:\"      (string) The voter address.\n"
+            "\"            votes:\"        (numeric) The number of votes.\n"
+            "\"        }\"\n"
+            "\"    ]\"\n"
+            "\"]\"\n"
+            "\nExamples:\n"
+            + HelpExampleCli("listbillvoters", "\"c32418e7537b085bbf2cbada63320979c4e72936\"")
+            + HelpExampleRpc("listbillvoters", "\"c32418e7537b085bbf2cbada63320979c4e72936\"")
+        );
+
+    uint160 id;
+    id.SetHex(request.params[0].get_str());
+
+    auto&& state = Vote::GetInstance().GetBill().GetState(id);
+    bool bNeedFindBalance = !state.bFinished;
+    std::vector<std::map<CKeyID, uint64_t>> voters = Vote::GetInstance().GetBill().GetVote(id);
+
+    UniValue results(UniValue::VARR);
+    for(uint8_t i = 0; i < voters.size(); ++i) {
+        UniValue first(UniValue::VOBJ);
+        first.push_back(Pair("index",  i));
+
+        UniValue v(UniValue::VARR);
+        for(auto& it : voters[i]) {
+            UniValue o(UniValue::VOBJ);
+            o.push_back(Pair("voters",  CBitcoinAddress(it.first).ToString()));
+            if(bNeedFindBalance) {
+                o.push_back(Pair("votes",  Vote::GetInstance().GetBalance(it.first)));
+            } else {
+                o.push_back(Pair("votes",  it.second));
+            }
+            v.push_back(o);
+        }
+        first.push_back(Pair("addresses", v));
+        results.push_back(first);
+    }
+
+    return results;
+}
+
+UniValue listvoterbills(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+            "listvoterbills address\n"
+            "\nlist the voted bills.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"address\"                 (string, required) The address of voter.\n"
+            "\nResult:\n"
+            "\"[\"\n"
+            "\"    {\"\n"
+            "\"        billid:\"                  (string) The voted bill id.\n"
+            "\"        optionindex:\"             (string) The bill option id.\n"
+            "\"    }\"\n"
+            "\"]\"\n"
+            "\nExamples:\n"
+            + HelpExampleCli("listvoterbills", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
+            + HelpExampleRpc("listvoterbills", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
+        );
+
+    CBitcoinAddress address(request.params[0].get_str());
+    CKeyID voterid;
+    address.GetKeyID(voterid);
+
+    vector<pair<uint160, uint8_t>> bills;
+    auto f = [&voterid, &bills](const uint160& key, const std::vector<std::map<CKeyID, uint64_t>>& value) -> bool {
+        for(uint8_t i = 0; i < value.size(); ++i) {
+            if(value[i].find(voterid) != value[i].end()) {
+                bills.push_back(make_pair(key, i));
+            }
+        }
+        return false;
+    };
+
+    Vote::GetInstance().GetBill().FindVote(f);
+
+    UniValue results(UniValue::VARR);
+    for(auto& it : bills) {
+        UniValue o(UniValue::VOBJ);
+        o.push_back(Pair("id", it.first.GetHex()));
+        o.push_back(Pair("index", it.second));
+        results.push_back(o);
+    }
+
+    return results;
+}
+
+UniValue getbill(const JSONRPCRequest& request)
+{
+    if (!EnsureWalletIsAvailable(request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+            "getbill billid\n"
+            "\nget bill detail infomation.\n"
+            + HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"billid\"                 (string, required) The bill id.\n"
+            "\nResult:\n"
+            "\"{\"\n"
+            "\"    tilte:\"                (string) The bill title.\n"
+            "\"    detail:\"               (string) The bill detail.\n"
+            "\"    url:\"                  (string) The url related the bill.\n"
+            "\"    starttime:\"            (numeric) The bill endtime.\n"
+            "\"    endtime:\"              (numeric) The bill endtime.\n"
+            "\"    committee:\"            (string) The bill submit by the committee.\n"
+            "\"    options:\"              (arrary) The bill options.\n"
+            "\"        [\"\n"
+            "\"            option:\"       (string) The bill option.\n"
+            "\"        ]\"\n"
+            "\"    state:\"                (object) The bill state.\n"
+            "\"        {\"\n"
+            "\"            id:\"           (string) The bill id.\n"
+            "\"            title:\"        (string) The bill title.\n"
+            "\"            isfinished:\"   (bool) When the value of isfinished is set true, it means the vote of bill is finished.\n"
+            "\"            ispassed:\"     (bool) When the value of ispassed is set true, it means the vote of bill is passed.\n"
+            "\"            optoinindex:\"  (bool) The option with this optionindex won the most votes.\n"
+            "\"            totalvote:\"    (numeric) The bill total vote amount.\n"
+            "\"            totalvote:\"    (numeric) The bill total vote amount.\n"
+            "\"        }\"\n"
+            "\"}\"\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getbill", "\"c32418e7537b085bbf2cbada63320979c4e72936\"")
+            + HelpExampleRpc("getbill", "\"c32418e7537b085bbf2cbada63320979c4e72936\"")
+        );
+
+    uint160 id;
+    id.SetHex(request.params[0].get_str());
+
+    CSubmitBillData detail;
+    bool ret = Vote::GetInstance().GetBill().GetRegiste(&detail, id);
+
+    UniValue results(UniValue::VOBJ);
+
+    if(ret) {
+        results.push_back(Pair("title",  detail.title));
+        results.push_back(Pair("detail",  detail.detail));
+        results.push_back(Pair("url",  detail.url));
+        results.push_back(Pair("starttime",  detail.starttime));
+        results.push_back(Pair("endtime",  detail.endtime));
+        results.push_back(Pair("committee",  detail.committee.GetHex()));
+        UniValue v(UniValue::VARR);
+        for(auto& it : detail.options) {
+            UniValue o(UniValue::VOBJ);
+            o.push_back(Pair("option", it));
+            v.push_back(o);
+        }
+        results.push_back(Pair("options",  v));
+
+        UniValue o(UniValue::VOBJ);
+        auto&& state = Vote::GetInstance().GetBill().GetState(id);
+        o.push_back(Pair("isfinished",  state.bFinished));
+        o.push_back(Pair("ispassed",  state.bPassed));
+        o.push_back(Pair("optoinindex",  state.nOptionIndex));
+        o.push_back(Pair("totalvote",  state.nTotalVote));
+        results.push_back(Pair("state",  o));
+    }
+
+    return results;
 }
 
 static void SendVote(const CBitcoinAddress& fromAddr, const set<CBitcoinAddress>& setAddress, CWalletTx& wtxNew, bool isVote)
@@ -3486,7 +4383,7 @@ UniValue getcoindistribution(const JSONRPCRequest& request)
         );
 
     std::set<uint64_t> distribution;
-    for(auto i=0; i < request.params.size(); ++i) {
+    for(uint8_t i=0; i < request.params.size(); ++i) {
         int64_t d = atol(request.params[i].get_str().c_str());
         if(d <= 0) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("para: ") + request.params[0].get_str() + string(" is negative"));
@@ -3759,6 +4656,20 @@ static const CRPCCommand commands[] =
     { "dpos",               "getdelegatefunds",         &getdelegatefunds,         true,   {"getdelegatefunds", "delegatename"} },
     { "dpos",               "listvoteddelegates",       &listvoteddelegates,       true,   {"listvoteddelegates", "address"} },
     { "dpos",               "listreceivedvotes",        &listreceivedvotes,        true,   {"listreceivedvotes", "delegatename"} },
+    { "govern",             "submitbill",               &submitbill,               true,   {"submitbill"} },
+    { "govern",             "votebill",                 &votebill,                 true,   {"votebill"} },
+    { "govern",             "listbills",                &listbills,                true,   {"listbills"} },
+    { "govern",             "getbill",                  &getbill,                  true,   {"getbill"} },
+    { "govern",             "listbillvoters",           &listbillvoters,           true,   {"listbillvoters"} },
+    { "govern",             "listvoterbills",           &listvoterbills,           true,   {"listvoterbills"} },
+    { "govern",             "registercommittee",        &registercommittee,        true,   {"registercommittee"} },
+    { "govern",             "votecommittee",            &votecommittee,            true,   {"votecommittee"} },
+    { "govern",             "cancelvotecommittee",      &cancelvotecommittee,      true,   {"cancelvotecommittee"} },
+    { "govern",             "listcommittees",           &listcommittees,           true,   {"listcommittees"} },
+    { "govern",             "getcommittee",             &getcommittee,             true,   {"getcommittee"} },
+    { "govern",             "listcommitteevoters",      &listcommitteevoters,      true,   {"listcommitteevoters"} },
+    { "govern",             "listcommitteebills",       &listcommitteebills,       true,   {"listcommitteebills"} },
+    { "govern",             "listvotercommittees",      &listvotercommittees,      true,   {"listvotercommittees"} },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)

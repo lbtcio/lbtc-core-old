@@ -181,7 +181,11 @@ enum opcodetype
     OP_REGISTE = 0xc0,
     OP_VOTE = 0xc1,
     OP_REVOKE = 0xc2,
-
+    OP_REGISTE_COMMITTEE = 0xc3,
+    OP_VOTE_COMMITTEE = 0xc4,
+    OP_REVOKE_COMMITTEE = 0xc5,
+    OP_SUBMIT_BILL = 0xc6,
+    OP_VOTE_BILL = 0xc7,
 
     // template matching params
     OP_SMALLINTEGER = 0xfa,
@@ -419,17 +423,25 @@ public:
     CScript(int64_t b)        { operator<<(b); }
 
     explicit CScript(opcodetype b)     { operator<<(b); }
+    explicit CScript(uint8_t b)     { operator<<(b); }
     explicit CScript(const CScriptNum& b) { operator<<(b); }
     explicit CScript(const std::vector<unsigned char>& b) { operator<<(b); }
 
 
     CScript& operator<<(int64_t b) { return push_int64(b); }
+    CScript& operator<<(int32_t b) { return push_int64(b); }
 
     CScript& operator<<(opcodetype opcode)
     {
         if (opcode < 0 || opcode > 0xff)
             throw std::runtime_error("CScript::operator<<(): invalid opcode");
         insert(end(), (unsigned char)opcode);
+        return *this;
+    }
+
+    CScript& operator<<(uint8_t opcode)
+    {
+        insert(end(), opcode);
         return *this;
     }
 
