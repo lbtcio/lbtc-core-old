@@ -48,7 +48,7 @@ public:
     typedef boost::shared_lock<boost::shared_mutex> read_lock;
     typedef boost::unique_lock<boost::shared_mutex> write_lock;
 
-    CVoteDBK1() : nVersion(1) {}
+    CVoteDBK1(uint64_t height) : nVersion(1), nStartHeight(height) {}
 
     void Save(const std::string& filename)
     {
@@ -65,10 +65,16 @@ public:
         bool ret = false;
 
         write_lock w(lock);
+
+        if(height < nStartHeight) {
+            AddInvalid(hash, height);
+            return false;
+        }
+
         if(fUndo) {
             if(IsInvalid(hash)) {
                 DelInvalid(hash);
-                return true;
+                return false;
             }
 
             auto it = mapKV.find(k);
@@ -163,6 +169,11 @@ public:
         bool ret = false;
 
         write_lock w(lock);
+        if(height < nStartHeight) {
+            AddInvalid(hash, height);
+            return false;
+        }
+
         if(fUndo) {
             if(IsInvalid(hash)) {
                 DelInvalid(hash);
@@ -198,6 +209,11 @@ public:
         bool ret = false;
 
         write_lock w(lock);
+        if(height < nStartHeight) {
+            AddInvalid(hash, height);
+            return false;
+        }
+
         if(fUndo) {
             if(IsInvalid(hash)) {
                 DelInvalid(hash);
@@ -218,6 +234,7 @@ public:
                 && it != mapK1Voter.end()
                 && it->second.find(vote) != it->second.end()) {
                 it->second.erase(vote);
+                setVoter.erase(vote);
                 ret = true;
             } else {
                 AddInvalid(hash, height);
@@ -258,6 +275,7 @@ private:
 
 private:
     uint64_t nVersion;
+    uint64_t nStartHeight;
     boost::shared_mutex lock;
     std::map<K, V> mapKV;
     std::map<K, std::map<Voter, uint64_t>> mapK1Voter;
@@ -271,8 +289,8 @@ public:
     typedef boost::shared_lock<boost::shared_mutex> read_lock;
     typedef boost::unique_lock<boost::shared_mutex> write_lock;
 
-    CVoteDBK2(std::function<uint64_t(const CKeyID&)> getAddressBalance)
-        : nVersion(1)
+    CVoteDBK2(uint64_t height, uint64_t votenum, std::function<uint64_t(const CKeyID&)> getAddressBalance)
+        : nVersion(1), nStartHeight(height), nMinVoteNum(votenum)
     {
         this->funcGetAddressBalance = getAddressBalance;
     }
@@ -292,10 +310,15 @@ public:
         bool ret = false;
 
         write_lock w(lock);
+        if(height < nStartHeight) {
+            AddInvalid(hash, height);
+            return false;
+        }
+
         if(fUndo) {
             if(IsInvalid(hash)) {
                 DelInvalid(hash);
-                return true;
+                return false;
             }
 
             auto it = mapKV.find(k);
@@ -392,12 +415,17 @@ public:
     {
         bool ret = false;
 
-        if(mapKState[k].bFinished) {
+        write_lock w(lock);
+        if(height < nStartHeight) {
             AddInvalid(hash, height);
-            return ret;
+            return false;
         }
 
-        write_lock w(lock);
+        if(mapKState[k].bFinished) {
+            AddInvalid(hash, height);
+            return false;
+        }
+
         if(fUndo) {
             if(IsInvalid(hash)) {
                 DelInvalid(hash);
@@ -476,12 +504,6 @@ public:
         state.bFinished = true;
         state.nTotalVote = nTotalVote;
         state.nOptionIndex = index;
-        uint64_t nMinVoteNum = 0;
-        if(Params().NetworkIDString() == "main") {
-            nMinVoteNum = 10000000000000;
-        } else {
-            nMinVoteNum = 10000000000;
-        }
 
         if(nTotalVote > nMinVoteNum) {
             if(votes.size() == 2) {
@@ -541,6 +563,8 @@ private:
 
 private:
     uint64_t nVersion;
+    uint64_t nStartHeight;
+    uint64_t nMinVoteNum;
     std::function<uint64_t(const CKeyID&)> funcGetAddressBalance;
 
     boost::shared_mutex lock;

@@ -13,7 +13,7 @@ typedef boost::unique_lock<boost::shared_mutex> write_lock;
 using namespace std;
 
 Vote::Vote()
-    : mapAddressBalance(100000000), bill(GetBalance)
+    : mapAddressBalance(100000000)
 {
 }
 
@@ -34,6 +34,13 @@ Vote::~Vote()
 bool Vote::Init(int64_t nBlockHeight, const std::string& strBlockHash)
 { 
     //write_lock w(lockVote);
+    if(Params().NetworkIDString() == "main") {
+        pbill = make_shared<CVoteDBK2<uint160, CSubmitBillData, CKeyID>>(5854000, 300000 * COIN, GetBalance);
+        pcommittee = make_shared<CVoteDBK1<CKeyID, CRegisterCommitteeData, CKeyID>>(5854000);
+    } else {
+        pbill = make_shared<CVoteDBK2<uint160, CSubmitBillData, CKeyID>>(806300, 100 * COIN, GetBalance);
+        pcommittee = make_shared<CVoteDBK1<CKeyID, CRegisterCommitteeData, CKeyID>>(806300);
+    }
 
     strFilePath = (GetDataDir() / "dpos").string();
     strDelegateFileName = strFilePath + "/" + DELEGATE_FILE;
@@ -681,8 +688,8 @@ bool Vote::Write(const std::string& strBlockHash)
     }
     fclose(file);
 
-    bill.Save(strBillFileName);
-    committee.Save(strCommitteeFileName);
+    pbill->Save(strBillFileName);
+    pcommittee->Save(strCommitteeFileName);
 
     return true;
 }
@@ -855,8 +862,8 @@ bool Vote::Read()
     fclose(file);
     }
 
-    bill.Load(strBillFileName);
-    committee.Load(strCommitteeFileName);
+    pbill->Load(strBillFileName);
+    pcommittee->Load(strCommitteeFileName);
 
     return true;
 }

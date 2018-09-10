@@ -159,11 +159,11 @@ public:
     std::map<CMyAddress, uint256> GetDelegateMultiaddress(const CMyAddress& delegate);
 
     CVoteDBK1<CKeyID, CRegisterCommitteeData, CKeyID>& GetCommittee() {
-        return committee;
+        return *pcommittee;
     }
 
     CVoteDBK2<uint160, CSubmitBillData, CKeyID>& GetBill() {
-        return bill;
+        return *pbill;
     }
 
     static const int MaxNumberOfVotes = 51;
@@ -232,8 +232,8 @@ private:
     std::string strOldBlockHash;
     int64_t nOldBlockHeight;
 
-    CVoteDBK1<CKeyID, CRegisterCommitteeData, CKeyID> committee;
-    CVoteDBK2<uint160, CSubmitBillData, CKeyID> bill;
+    std::shared_ptr<CVoteDBK1<CKeyID, CRegisterCommitteeData, CKeyID>> pcommittee;
+    std::shared_ptr<CVoteDBK2<uint160, CSubmitBillData, CKeyID>> pbill;
 };
 
 #endif
