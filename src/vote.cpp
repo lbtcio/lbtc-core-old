@@ -5,6 +5,7 @@
 #include "util.h"
 #include "base58.h"
 #include "vote.h"
+#include "myserialize.h"
 
 typedef boost::shared_lock<boost::shared_mutex> read_lock;
 typedef boost::unique_lock<boost::shared_mutex> write_lock;
@@ -27,9 +28,19 @@ Vote::~Vote()
 #define INVALIDVOTETX_FILE "invalidvotetx.dat"
 #define DELEGATE_MULTIADDRESS_FILE "delegatemultiaddress.dat"
 
+#define BILL_FILE "bill.data"
+#define COMMITTEE_FILE "committee.data"
+
 bool Vote::Init(int64_t nBlockHeight, const std::string& strBlockHash)
 { 
     //write_lock w(lockVote);
+    if(Params().NetworkIDString() == "main") {
+        pbill = make_shared<CVoteDBK2<uint160, CSubmitBillData, CKeyID>>(5854000, 300000 * COIN, GetBalance);
+        pcommittee = make_shared<CVoteDBK1<CKeyID, CRegisterCommitteeData, CKeyID>>(5854000);
+    } else {
+        pbill = make_shared<CVoteDBK2<uint160, CSubmitBillData, CKeyID>>(806300, 100 * COIN, GetBalance);
+        pcommittee = make_shared<CVoteDBK1<CKeyID, CRegisterCommitteeData, CKeyID>>(806300);
+    }
 
     strFilePath = (GetDataDir() / "dpos").string();
     strDelegateFileName = strFilePath + "/" + DELEGATE_FILE;
@@ -38,6 +49,9 @@ bool Vote::Init(int64_t nBlockHeight, const std::string& strBlockHash)
     strControlFileName = strFilePath + "/" + CONTROL_FILE;
     strInvalidVoteTxFileName = strFilePath + "/" + INVALIDVOTETX_FILE;
     strDelegateMultiaddressName = strFilePath + "/" + DELEGATE_MULTIADDRESS_FILE;
+
+    strBillFileName = strFilePath + "/" + BILL_FILE;
+    strCommitteeFileName = strFilePath + "/" + COMMITTEE_FILE;
 
     if(nBlockHeight == 0) {
         if(!boost::filesystem::is_directory(strFilePath)) {
@@ -674,6 +688,9 @@ bool Vote::Write(const std::string& strBlockHash)
     }
     fclose(file);
 
+    pbill->Save(strBillFileName);
+    pcommittee->Save(strCommitteeFileName);
+
     return true;
 }
 
@@ -845,6 +862,8 @@ bool Vote::Read()
     fclose(file);
     }
 
+    pbill->Load(strBillFileName);
+    pcommittee->Load(strCommitteeFileName);
 
     return true;
 }
@@ -1038,4 +1057,184 @@ std::map<uint64_t, std::pair<uint64_t, uint64_t>> Vote::GetCoinDistribution(cons
     }
 
     return result;
+}
+
+std::vector<unsigned char> StructToData(const CRegisterCommitteeData& data)
+{
+    CScript script(data.opcode);
+    script << ToByteVector(data.name) << ToByteVector(data.url);
+  
+    return ToByteVector(script);
+}
+
+std::vector<unsigned char> StructToData(const CVoteCommitteeData& data)
+{
+    CScript script(data.opcode);
+    script << ToByteVector(data.committee);
+
+    return ToByteVector(script);
+}
+
+std::vector<unsigned char> StructToData(const CCancelVoteCommitteeData& data)
+{
+    CScript script(data.opcode);
+    script << ToByteVector(data.committee);
+
+    return ToByteVector(script);
+}
+
+std::vector<unsigned char> StructToData(const CSubmitBillData& data)
+{
+    CScript script(data.opcode);
+    script << ToByteVector(data.title) << ToByteVector(data.detail) << ToByteVector(data.url) << ToByteVector(std::to_string(data.endtime)) << (uint8_t)data.options.size();
+    for(auto& it : data.options) {
+        script << ToByteVector(it);
+    }
+
+    return ToByteVector(script);
+}
+
+std::vector<unsigned char> StructToData(const CVoteBillData& data)
+{
+    CScript script(data.opcode);
+    script << ToByteVector(data.id.GetHex()) << (uint8_t)data.index;
+
+    return ToByteVector(script);
+}
+
+string CheckStruct(const CSubmitBillData& data)
+{
+    string ret;
+    if(data.title.empty()) {
+        ret = "bill title is empty";
+    } else if(data.title.length() > 128) {
+        ret = "bill title length greater than 128 bytes";
+    } else if(data.detail.length() > 256) {
+        ret = "bill detail length greater than 256 bytes";
+    } else if(data.url.empty()) {
+        ret = "bill url is empty";
+    } else if(data.url.length() > 256) {
+        ret = "bill url length greater than 256 bytes";
+    } else if(data.options.size() < 2) {
+        ret = "bill options number less than 2";
+    } else if(data.options.size() > 8) {
+        ret = "bill options number greater than 8";
+    } else {
+        for(auto& i : data.options) {
+            if(i.size() > 256) {
+                ret = "bill option content length greater than 256 bytes";
+                break;
+            }
+        }
+    }
+
+    return ret;
+}
+
+bool DataToStruct(CSubmitBillData& data, const CScript& script)
+{
+    bool ret = false;
+
+    auto iter = script.begin();
+    data.opcode = *iter++;
+
+    opcodetype opcode;
+    std::vector<unsigned char> vchRet;
+    if (!script.GetOp2(iter, opcode, &vchRet)) {
+        return false;
+    }
+    data.title = std::string(vchRet.begin(), vchRet.end());
+
+    if (!script.GetOp2(iter, opcode, &vchRet)) {
+        return false;
+    }
+    data.detail = std::string(vchRet.begin(), vchRet.end());
+
+    if (!script.GetOp2(iter, opcode, &vchRet)) {
+        return false;
+    }
+    data.url = std::string(vchRet.begin(), vchRet.end());
+
+    if (!script.GetOp2(iter, opcode, &vchRet)) {
+        return false;
+    }
+    data.endtime = std::stoll(std::string(vchRet.begin(), vchRet.end()));
+
+    uint8_t num = *iter++;
+    for(int i =0; i < num; ++i) {
+        if (!script.GetOp2(iter, opcode, &vchRet)) {
+            return false;
+        }
+        data.options.push_back(std::string(vchRet.begin(), vchRet.end()));
+    }
+
+    ret = true;
+    return ret;
+}
+
+bool DataToStruct(CVoteBillData& data, const CScript& script)
+{
+    bool ret = false;
+
+    auto iter = script.begin();
+    data.opcode = *iter++;
+
+    opcodetype opcode;
+    std::vector<unsigned char> vchRet;
+    if (!script.GetOp2(iter, opcode, &vchRet)) {
+        return false;
+    }
+
+    if(vchRet.size() != 40) {
+        return false;
+    }
+    data.id.SetHex(std::string(vchRet.begin(), vchRet.end()));
+    data.index = *iter++;
+
+    ret = true;
+    return ret;
+}
+
+bool DataToStruct(CRegisterCommitteeData& data, const CScript& script)
+{
+    auto iter = script.begin();
+    data.opcode = *iter++;
+
+    opcodetype opcode;
+    std::vector<unsigned char> vchRet;
+    if (!script.GetOp2(iter, opcode, &vchRet)) {
+        return false;
+    }
+    data.name = std::string(vchRet.begin(), vchRet.end());
+    if(data.name.size() > 32) {
+        return false;
+    }
+
+    if (!script.GetOp2(iter, opcode, &vchRet)) {
+        return false;
+    }
+    data.url = std::string(vchRet.begin(), vchRet.end());
+    if(data.url.size() > 256) {
+        return false;
+    }
+    return true;
+}
+
+bool DataToStruct(CVoteCommitteeData& data, const CScript& script)
+{
+    bool ret = false;
+
+    auto iter = script.begin();
+    data.opcode = *iter++;
+
+    opcodetype opcode;
+    std::vector<unsigned char> vchRet;
+    if (!script.GetOp2(iter, opcode, &vchRet)) {
+        return false;
+    }
+
+    data.committee = CKeyID(uint160(vchRet));
+
+    ret = true;
+    return ret;
 }

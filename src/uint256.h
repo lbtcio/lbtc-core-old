@@ -91,6 +91,13 @@ public:
                ((uint64_t)ptr[7]) << 56;
     }
 
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar& data;
+    }
+
+
     template<typename Stream>
     void Serialize(Stream& s) const
     {

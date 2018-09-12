@@ -4805,6 +4805,60 @@ bool ProcessVote(uint32_t nHeight, uint256 hash, const CPubKey& pubkey, uint64_t
     return Vote::GetInstance().ProcessVote(key, setDelegate, hash, nHeight, fUndo);
 }
 
+bool ProcessVoteBill(uint32_t nHeight, uint256 hash, const CPubKey& pubkey, uint64_t nTime, const CScript& script, bool fUndo)
+{
+    CVoteBillData data;
+    if(DataToStruct(data, script) == false) {
+        LogPrintf("VoteBill: hash:%s Scripte Error", hash.ToString().c_str());
+        return false;
+    }
+    auto key = pubkey.GetID();
+    return Vote::GetInstance().GetBill().Vote(key, data.id, data.index, hash, nHeight, fUndo);
+}
+
+bool ProcessVoteCommittee(uint32_t nHeight, uint256 hash, const CPubKey& pubkey, uint64_t nTime, const CScript& script, bool fVote, bool fUndo)
+{
+    CVoteCommitteeData data;
+    if(DataToStruct(data, script) == false) {
+        LogPrintf("VoteCommittee: hash:%s Scripte Error", hash.ToString().c_str());
+        return false;
+    }
+    auto key = pubkey.GetID();
+    if(fVote)
+        return Vote::GetInstance().GetCommittee().Vote(key, data.committee, hash, nHeight, fUndo);
+    else
+        return Vote::GetInstance().GetCommittee().CancelVote(key, data.committee, hash, nHeight, fUndo);
+}
+
+bool ProcessSubmitBill(uint32_t nHeight, uint256 hash, const CPubKey& pubkey, uint64_t nTime, const CScript& script, bool fUndo)
+{
+    CSubmitBillData data;
+    if(DataToStruct(data, script) == false) {
+        return false;
+    }
+
+    auto key = pubkey.GetID();
+    if(Vote::GetInstance().GetCommittee().GetRegiste(NULL, key) == false) {
+        return false;
+    }
+
+    data.starttime = nTime;
+    data.committee = key;
+    return Vote::GetInstance().GetBill().Register(Hash160(data.title.begin(), data.title.end()), data, hash, nHeight, fUndo);
+}
+
+bool ProcessRegisterCommittee(uint32_t nHeight, uint256 hash, const CPubKey& pubkey, uint64_t nTime, const CScript& script, bool fUndo)
+{
+    CRegisterCommitteeData data;
+    if(DataToStruct(data, script) == false) {
+        return false;
+    }
+
+    auto key = pubkey.GetID();
+
+    return Vote::GetInstance().GetCommittee().Register(key, data, hash, nHeight, fUndo);
+}
+
 bool DoVoting(const CBlock& block, uint32_t nHeight, std::map<uint256, uint64_t>& mapTxFee, bool fUndo)
 {
     if(fUndo) {
@@ -4815,6 +4869,8 @@ bool DoVoting(const CBlock& block, uint32_t nHeight, std::map<uint256, uint64_t>
 
     CPubKey pubkey;
     CScript script;
+
+    Vote::GetInstance().GetBill().NewBlockHeight(nHeight, block.nTime, fUndo);
 
     for(auto& t : block.vtx) {
         uint64_t nTime = 0;
@@ -4840,6 +4896,32 @@ bool DoVoting(const CBlock& block, uint32_t nHeight, std::map<uint256, uint64_t>
                     if(mapTxFee[t->GetHash()] >= 1000000)
                         ProcessCancelVote(nHeight, (*t).GetHash(), pubkey, nTime, script, fUndo);
                 break;
+
+                case OP_REGISTE_COMMITTEE:
+                    if(mapTxFee[t->GetHash()] >= OP_REGISTER_COMMITTEE_FEE)
+                        ProcessRegisterCommittee(nHeight, (*t).GetHash(), pubkey, nTime, script, fUndo);
+                break;
+
+                case OP_VOTE_COMMITTEE:
+                    if(mapTxFee[t->GetHash()] >= OP_VOTE_COMMITTEE_FEE)
+                        ProcessVoteCommittee(nHeight, (*t).GetHash(), pubkey, nTime, script, true, fUndo);
+                break;
+
+                case OP_REVOKE_COMMITTEE:
+                    if(mapTxFee[t->GetHash()] >= OP_VOTE_COMMITTEE_FEE)
+                        ProcessVoteCommittee(nHeight, (*t).GetHash(), pubkey, nTime, script, false, fUndo);
+                break;
+
+                case OP_SUBMIT_BILL:
+                    if(mapTxFee[t->GetHash()] >= OP_SUBMIT_BILL_FEE)
+                        ProcessSubmitBill(nHeight, (*t).GetHash(), pubkey, nTime, script, fUndo);
+                break;
+
+                case OP_VOTE_BILL:
+                    if(mapTxFee[t->GetHash()] >= OP_VOTE_BILL_FEE)
+                        ProcessVoteBill(nHeight, (*t).GetHash(), pubkey, nTime, script, fUndo);
+                break;
+
             }
         }
     }
