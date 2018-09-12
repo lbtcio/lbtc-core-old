@@ -83,7 +83,7 @@ bool AppInit(int argc, char* argv[])
         if (IsArgSet("-version"))
         {
             strUsage += FormatParagraph(LicenseInfo());
-            strUsage = "LBTC Core Version v1.2.1\n";
+            strUsage = "LBTC Core Version v1.2.2\n";
         }
         else
         {

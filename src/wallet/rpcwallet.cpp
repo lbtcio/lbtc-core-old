@@ -3247,9 +3247,9 @@ string JsonToStruct(CBitcoinAddress& address, CRegisterCommitteeData& data, cons
             ret = "The name has registerd";
         }
     }
-	if(data.name.size() > 32 || data.url.size() > 256) {
-		ret = "Name or Url length too long";
-	}
+    if(data.name.size() > 32 || data.url.size() > 256) {
+        ret = "Name or Url length too long";
+    }
 
     return ret;
 }
@@ -3336,9 +3336,12 @@ string JsonToStruct(CBitcoinAddress& address, CSubmitBillData& data, const JSONR
     data.title = request.params[1].get_str();
     data.detail = request.params[2].get_str();
     data.url = request.params[3].get_str();
-    //whh
-    //data.endtime = stol(request.params[4].get_str()) * 3600 * 24 + time(NULL);
-    data.endtime = stol(request.params[4].get_str()) + time(NULL);
+
+    int64_t t = stol(request.params[4].get_str());
+    if(t <= 0 || t > 360) {
+        return "parameter time invalid";
+    }
+    data.endtime = t * 3600 * 24 + time(NULL);
     for(uint8_t i = 5; i < request.params.size(); ++i) {
         data.options.push_back(request.params[i].get_str());
     }

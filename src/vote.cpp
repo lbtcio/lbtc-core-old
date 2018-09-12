@@ -38,8 +38,8 @@ bool Vote::Init(int64_t nBlockHeight, const std::string& strBlockHash)
         pbill = make_shared<CVoteDBK2<uint160, CSubmitBillData, CKeyID>>(5854000, 300000 * COIN, GetBalance);
         pcommittee = make_shared<CVoteDBK1<CKeyID, CRegisterCommitteeData, CKeyID>>(5854000);
     } else {
-        pbill = make_shared<CVoteDBK2<uint160, CSubmitBillData, CKeyID>>(806300, 100 * COIN, GetBalance);
-        pcommittee = make_shared<CVoteDBK1<CKeyID, CRegisterCommitteeData, CKeyID>>(806300);
+        pbill = make_shared<CVoteDBK2<uint160, CSubmitBillData, CKeyID>>(815352, 100 * COIN, GetBalance);
+        pcommittee = make_shared<CVoteDBK1<CKeyID, CRegisterCommitteeData, CKeyID>>(815352);
     }
 
     strFilePath = (GetDataDir() / "dpos").string();
