@@ -1168,6 +1168,10 @@ bool DataToStruct(CSubmitBillData& data, const CScript& script)
         data.options.push_back(std::string(vchRet.begin(), vchRet.end()));
     }
 
+    if(data.options.size() < 2) {
+        return false;
+    }
+
     ret = true;
     return ret;
 }

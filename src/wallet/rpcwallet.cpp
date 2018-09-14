@@ -3372,8 +3372,7 @@ string JsonToStruct(CBitcoinAddress& address, CVoteBillData& data, const JSONRPC
     std::vector<std::map<CKeyID, uint64_t>> voters = Vote::GetInstance().GetBill().GetVote(data.id);
     for(auto& i : voters) {
         if(i.find(id) != i.end()) {
-            ret = "This address has voted the bill";
-            break;
+            return "This address has voted the bill";
         }
     }
 

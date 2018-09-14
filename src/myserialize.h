@@ -19,13 +19,13 @@
 #include <vector>
 
 template<typename A, typename B>
-void SerializeData(A& a, B b)
+void SerializeData(A& a, B& b)
 {
    a & BOOST_SERIALIZATION_NVP(b);
 }
 
 template<typename A, typename B, typename ... Args>
-void SerializeData(A& a, B b, Args ... args)
+void SerializeData(A& a, B& b, Args& ... args)
 {
    SerializeData(a, b);
    SerializeData(a, args...);

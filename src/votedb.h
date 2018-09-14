@@ -84,8 +84,8 @@ public:
                 ret = true;
             }
         } else {
-            ret = true;
             if(mapKV.find(k) == mapKV.end()) {
+                ret = true;
                 for(auto& i : mapKV) {
                     if(i.second.name == v.name) {
                         ret = false;
@@ -421,7 +421,8 @@ public:
             return false;
         }
 
-        if(mapKState[k].bFinished) {
+        auto its = mapKState.find(k);
+        if(its != mapKState.end() && its->second.bFinished) {
             AddInvalid(hash, height);
             return false;
         }
